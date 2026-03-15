@@ -372,7 +372,11 @@ case "${1:-}" in
     info "Pulling latest from GitHub..."
     cd "$DOTFILES_DIR" && git pull --rebase origin main
     echo ""
-    info "Checking and installing missing components..."
+    info "Re-running with latest version..."
+    exec "$DOTFILES_DIR/install.sh" _update_run
+    ;;
+  "_update_run")
+    # Internal: called after git pull to run with fresh code
     for mod in $ALL_MODULES; do
       install_$mod
     done
