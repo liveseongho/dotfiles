@@ -323,7 +323,7 @@ run_status() {
     "zsh-syntax-highlighting:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
-    "Symlink .bashrc:test -L $HOME/.bashrc"
+    "bashrc zsh switch:grep -q 'exec zsh' $HOME/.bashrc 2>/dev/null"
     "Symlink .zshrc:test -L $HOME/.zshrc"
     "Symlink .vimrc:test -L $HOME/.vimrc"
     "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
@@ -355,7 +355,7 @@ run_status() {
   if [ "$missing" -eq 0 ]; then
     echo -e "  ${GREEN}Everything installed!${NC}"
   else
-    echo -e "  ${YELLOW}$missing item(s) missing. Run './install.sh update' to fix.${NC}"
+    echo -e "  ${YELLOW}$missing item(s) missing. Run 'dotfiles update' to fix.${NC}"
   fi
 }
 
