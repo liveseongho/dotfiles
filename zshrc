@@ -19,9 +19,18 @@ plugins=(
   git
   zsh-syntax-highlighting
   zsh-autosuggestions
+  zsh-autocomplete
 )
 
 source $ZSH/oh-my-zsh.sh
+
+# ========== zsh-autocomplete settings ==========
+# Show history completions first
+zstyle ':autocomplete:*' default-context history-incremental-search-backward
+# Limit dropdown to 5 lines
+zstyle ':autocomplete:*' list-lines 5
+# Tab inserts common prefix first, then cycles
+zstyle ':autocomplete:tab:*' insert-unambiguous yes
 
 # ========== History ==========
 HISTFILE=~/.zsh_history

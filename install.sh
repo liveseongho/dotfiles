@@ -159,6 +159,7 @@ install_plugins() {
 
   clone_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
   clone_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+  clone_plugin "zsh-autocomplete" "https://github.com/marlonrichert/zsh-autocomplete.git"
 }
 
 # ========== Module: p10k ==========
@@ -321,6 +322,7 @@ run_status() {
     "Oh My Zsh:test -d $HOME/.oh-my-zsh"
     "zsh-autosuggestions:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     "zsh-syntax-highlighting:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    "zsh-autocomplete:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autocomplete"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
     "bashrc zsh switch:grep -q 'exec zsh' $HOME/.bashrc 2>/dev/null"
