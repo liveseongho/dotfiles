@@ -112,6 +112,11 @@ link_file() {
 link_file "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
 link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
 link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
+
+# Vim colorscheme
+mkdir -p "$HOME/.vim/colors" "$HOME/.vim/autoload"
+cp -f "$DOTFILES_DIR/vim/colors/onedark.vim" "$HOME/.vim/colors/" 2>/dev/null
+cp -f "$DOTFILES_DIR/vim/autoload/onedark.vim" "$HOME/.vim/autoload/" 2>/dev/null
 link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
 
 # ========== Powerlevel10k config ==========
