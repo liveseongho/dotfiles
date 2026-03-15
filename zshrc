@@ -40,6 +40,15 @@ export PATH="$HOME/dotfiles/bin:$PATH"
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 
+# ========== Environment Modules (HPC/Linux servers) ==========
+if [ -f /etc/profile.d/modules.sh ]; then
+  source /etc/profile.d/modules.sh
+elif [ -f /usr/share/modules/init/zsh ]; then
+  source /usr/share/modules/init/zsh
+elif [ -f /usr/share/Modules/init/zsh ]; then
+  source /usr/share/Modules/init/zsh
+fi
+
 # ========== Aliases ==========
 alias ll='ls -la'
 alias la='ls -A'
