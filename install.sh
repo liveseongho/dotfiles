@@ -243,6 +243,7 @@ install_symlinks() {
   }
 
   link_file "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
+  link_file "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"
   link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
   link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
@@ -310,6 +311,7 @@ run_status() {
     "zsh-syntax-highlighting:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
+    "Symlink .bashrc:test -L $HOME/.bashrc"
     "Symlink .zshrc:test -L $HOME/.zshrc"
     "Symlink .vimrc:test -L $HOME/.vimrc"
     "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
