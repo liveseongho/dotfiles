@@ -10,4 +10,13 @@ if [ ! -f "$DOTFILES_DIR/install.sh" ]; then
   exit 1
 fi
 
+# For update: pull first, then run fresh install.sh
+if [ "${1:-}" = "update" ]; then
+  cd "$DOTFILES_DIR"
+  git stash -q 2>/dev/null
+  git pull --rebase origin main
+  git stash pop -q 2>/dev/null
+  exec "$DOTFILES_DIR/install.sh" _update_run
+fi
+
 exec "$DOTFILES_DIR/install.sh" "$@"
