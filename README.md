@@ -15,41 +15,73 @@ git clone https://github.com/liveseongho/dotfiles ~/dotfiles
 cd ~/dotfiles && ./install.sh
 ```
 
+## Commands
+
+```bash
+./install.sh            # Full install (all modules)
+./install.sh update     # Re-check and install missing parts
+./install.sh status     # Show what's installed and what's missing
+./install.sh <module>   # Install specific module only
+./install.sh help       # Show usage
+```
+
+## Modules
+
+| Module | Description |
+|--------|-------------|
+| `deps` | System dependencies (zsh, git, curl, python3, Homebrew on macOS) |
+| `omz` | Oh My Zsh |
+| `plugins` | zsh-autosuggestions, zsh-syntax-highlighting |
+| `p10k` | Powerlevel10k theme |
+| `fonts` | MesloLGS NF fonts (auto-downloaded) |
+| `vim` | Vim config + One Dark colorscheme |
+| `symlinks` | Symlink all config files to `~/dotfiles/` |
+| `macos` | macOS preferences (key repeat, hidden files) |
+
 ## What's included
 
-| File | Description |
-|------|-------------|
-| `zshrc` | Oh My Zsh + Powerlevel10k + plugins |
-| `vimrc` | Clean vim config with sensible defaults |
-| `tmux.conf` | Mouse support, 256 colors, zsh shell |
-| `gitconfig` | Aliases, rebase pull, auto remote setup |
-| `install.sh` | Automated installer (idempotent) |
+```
+~/dotfiles/
+├── install.sh      # Modular installer
+├── zshrc           # → ~/.zshrc
+├── vimrc           # → ~/.vimrc
+├── tmux.conf       # → ~/.tmux.conf
+├── gitconfig       # → ~/.gitconfig
+├── p10k.zsh        # → ~/.p10k.zsh
+└── vim/
+    ├── colors/onedark.vim
+    └── autoload/onedark.vim
+```
 
-### Zsh plugins
-- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) — fish-like suggestions
-- [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting) — command coloring
-- [Powerlevel10k](https://github.com/romkatv/powerlevel10k) — fast, customizable prompt
+## Requirements
 
-### macOS tweaks (auto-applied)
-- Faster key repeat
-- Show hidden files in Finder
+| Requirement | Status |
+|-------------|--------|
+| macOS / Linux | ✅ Both supported |
+| git, curl, zsh | Auto-installed on Linux (apt, yum, pacman, apk) |
+| Python >= 3.7 | Optional (for font symbol check) |
+| Homebrew | Auto-installed on macOS |
+
+### Python compatibility
+
+The font symbol check requires Python >= 3.7. Both `python3` and `python` binaries are detected automatically. If Python is not available, the font check is skipped and all other modules install normally.
+
+## Supported platforms
+
+- **macOS** (Apple Silicon & Intel)
+- **Linux** — Ubuntu/Debian (apt), CentOS/RHEL (yum), Arch (pacman), Alpine (apk)
 
 ## After install
 
 ```bash
-p10k configure    # Set up your prompt style
+p10k configure    # Set up your prompt style (optional, config included)
 ```
 
-## Structure
+## Uninstall
 
+```bash
+rm ~/.zshrc ~/.vimrc ~/.tmux.conf ~/.gitconfig ~/.p10k.zsh
+rm -rf ~/.vim/colors/onedark.vim ~/.vim/autoload/onedark.vim
+# Restore backups if needed
+ls ~/.*backup* 2>/dev/null
 ```
-~/dotfiles/
-├── README.md
-├── install.sh      # One-command installer
-├── zshrc           # → ~/.zshrc
-├── vimrc           # → ~/.vimrc
-├── tmux.conf       # → ~/.tmux.conf
-└── gitconfig       # → ~/.gitconfig
-```
-
-All config files are symlinked from `~/dotfiles/` — edit once, applied everywhere.
