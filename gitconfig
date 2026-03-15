@@ -6,7 +6,6 @@
 	editor = vim
 	autocrlf = input
 	pager = less -FRX
-	quotepath = false
 
 [init]
 	defaultBranch = main
@@ -26,19 +25,6 @@
 	lg = log --oneline --graph --decorate -20
 	unstage = reset HEAD --
 	last = log -1 HEAD
-	amend = commit --amend -v
-	wdiff = diff --color-words
-
-[diff]
-	algorithm = patience
-	noprefix = true
-	renames = copies
-
-[merge]
-	conflictstyle = diff3
-
-[branch]
-	autosetuprebase = always
 
 [color]
 	ui = auto
