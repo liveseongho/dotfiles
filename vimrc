@@ -18,7 +18,7 @@ set laststatus=2
 set signcolumn=yes
 set termguicolors
 set background=dark
-colorscheme onedark
+colorscheme one-monokai
 
 " ========== Search ==========
 set hlsearch
