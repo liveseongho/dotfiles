@@ -9,7 +9,6 @@ set fileencoding=utf-8
 " ========== UI ==========
 syntax on
 set number
-set relativenumber
 set cursorline
 set showcmd
 set showmatch
