@@ -17,6 +17,8 @@ set wildmenu
 set laststatus=2
 set signcolumn=yes
 set termguicolors
+set background=dark
+colorscheme habamax
 
 " ========== Search ==========
 set hlsearch
