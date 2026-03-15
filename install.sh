@@ -114,6 +114,22 @@ link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
 link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
 link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
 
+# ========== Powerlevel10k config ==========
+link_file "$DOTFILES_DIR/p10k.zsh" "$HOME/.p10k.zsh"
+
+# ========== Fonts (MesloLGS NF for Powerlevel10k) ==========
+FONT_DIR="$HOME/Library/Fonts"
+if [ "$OS" = "Darwin" ] && [ ! -f "$FONT_DIR/MesloLGS NF Regular.ttf" ]; then
+  info "Installing MesloLGS NF fonts..."
+  mkdir -p "$FONT_DIR"
+  for style in "Regular" "Bold" "Italic" "Bold%20Italic"; do
+    curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20${style}.ttf" -o "$FONT_DIR/MesloLGS NF ${style//%20/ }.ttf"
+  done
+  ok "MesloLGS NF fonts installed"
+else
+  ok "MesloLGS NF fonts already installed"
+fi
+
 # ========== macOS defaults ==========
 if [ "$OS" = "Darwin" ]; then
   info "Applying macOS preferences..."
