@@ -360,8 +360,10 @@ case "${1:-}" in
     run_all
     ;;
   "update")
+    info "Pulling latest from GitHub..."
+    cd "$DOTFILES_DIR" && git pull --rebase origin main
+    echo ""
     info "Checking and installing missing components..."
-    setup_repo
     for mod in $ALL_MODULES; do
       install_$mod
     done
