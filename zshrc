@@ -8,6 +8,11 @@ fi
 # ~/.zshrc
 # Seongho's dotfiles — https://github.com/liveseongho/dotfiles
 
+# ========== Guard: zsh only ==========
+if [ -z "$ZSH_VERSION" ]; then
+  return 0 2>/dev/null || exit 0
+fi
+
 # ========== Oh My Zsh ==========
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
