@@ -69,20 +69,19 @@ fi
 # ========== Zsh Plugins ==========
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
-declare -A plugins=(
-  ["zsh-autosuggestions"]="https://github.com/zsh-users/zsh-autosuggestions"
-  ["zsh-syntax-highlighting"]="https://github.com/zsh-users/zsh-syntax-highlighting.git"
-)
-
-for name in "${!plugins[@]}"; do
-  dest="$ZSH_CUSTOM/plugins/$name"
+clone_plugin() {
+  local name="$1" url="$2"
+  local dest="$ZSH_CUSTOM/plugins/$name"
   if [ ! -d "$dest" ]; then
     info "Installing $name..."
-    git clone "${plugins[$name]}" "$dest"
+    git clone "$url" "$dest"
   else
     ok "$name already installed"
   fi
-done
+}
+
+clone_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
+clone_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting.git"
 
 # ========== Powerlevel10k ==========
 P10K_DIR="$ZSH_CUSTOM/themes/powerlevel10k"
