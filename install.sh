@@ -40,7 +40,7 @@ cd "$DOTFILES_DIR"
 OS="$(uname -s)"
 info "Detected OS: $OS"
 
-# ========== Homebrew (macOS) ==========
+# ========== Dependencies ==========
 if [ "$OS" = "Darwin" ]; then
   if ! command -v brew &>/dev/null; then
     info "Installing Homebrew..."
@@ -48,6 +48,25 @@ if [ "$OS" = "Darwin" ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   else
     ok "Homebrew already installed"
+  fi
+elif [ "$OS" = "Linux" ]; then
+  # Install zsh, git, curl if missing
+  if ! command -v zsh &>/dev/null || ! command -v git &>/dev/null || ! command -v curl &>/dev/null; then
+    info "Installing dependencies (zsh, git, curl)..."
+    if command -v apt-get &>/dev/null; then
+      sudo apt-get update -qq && sudo apt-get install -y -qq zsh git curl python3
+    elif command -v yum &>/dev/null; then
+      sudo yum install -y zsh git curl python3
+    elif command -v pacman &>/dev/null; then
+      sudo pacman -S --noconfirm zsh git curl python
+    elif command -v apk &>/dev/null; then
+      apk add --no-cache zsh git curl python3
+    else
+      err "Could not detect package manager. Please install zsh, git, curl manually."
+      exit 1
+    fi
+  else
+    ok "Dependencies already installed"
   fi
 fi
 
@@ -123,13 +142,22 @@ link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
 link_file "$DOTFILES_DIR/p10k.zsh" "$HOME/.p10k.zsh"
 
 # ========== Fonts (MesloLGS NF for Powerlevel10k) ==========
-FONT_DIR="$HOME/Library/Fonts"
-if [ "$OS" = "Darwin" ] && [ ! -f "$FONT_DIR/MesloLGS NF Regular.ttf" ]; then
+if [ "$OS" = "Darwin" ]; then
+  FONT_DIR="$HOME/Library/Fonts"
+elif [ "$OS" = "Linux" ]; then
+  FONT_DIR="$HOME/.local/share/fonts"
+fi
+
+if [ ! -f "$FONT_DIR/MesloLGS NF Regular.ttf" ]; then
   info "Installing MesloLGS NF fonts..."
   mkdir -p "$FONT_DIR"
   for style in "Regular" "Bold" "Italic" "Bold%20Italic"; do
     curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20${style}.ttf" -o "$FONT_DIR/MesloLGS NF ${style//%20/ }.ttf"
   done
+  # Refresh font cache on Linux
+  if [ "$OS" = "Linux" ] && command -v fc-cache &>/dev/null; then
+    fc-cache -f "$FONT_DIR"
+  fi
   ok "MesloLGS NF fonts installed"
 else
   ok "MesloLGS NF fonts already installed"
@@ -154,7 +182,7 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 echo "  Check that all symbols below render correctly:"
 echo ""
-/usr/bin/python3 -c "
+python3 -c "
 symbols = [
     ('Powerline',  '\ue0b0 \ue0b2 \ue0b1 \ue0b3'),
     ('Nerd Font',  '\uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7'),
