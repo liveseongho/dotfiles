@@ -21,14 +21,14 @@ plugins=(
   zsh-autosuggestions
 )
 
-# ========== zsh-autocomplete (must load before oh-my-zsh) ==========
-zstyle ':autocomplete:*' list-lines 5
-zstyle ':autocomplete:tab:*' insert-unambiguous yes
-if [[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]]; then
-  source ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-fi
-
 source $ZSH/oh-my-zsh.sh
+
+# ========== fzf ==========
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+if command -v fzf &>/dev/null; then
+  # Use fzf for Ctrl+R history search
+  eval "$(fzf --zsh 2>/dev/null)" || source <(fzf --generate-shell-integration zsh 2>/dev/null) || true
+fi
 
 # ========== History ==========
 HISTFILE=~/.zsh_history

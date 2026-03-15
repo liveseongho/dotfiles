@@ -159,7 +159,23 @@ install_plugins() {
 
   clone_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
   clone_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting.git"
-  clone_plugin "zsh-autocomplete" "https://github.com/marlonrichert/zsh-autocomplete.git"
+  # fzf
+  if ! command -v fzf &>/dev/null; then
+    info "Installing fzf..."
+    if [ "$OS" = "Darwin" ]; then
+      brew install fzf
+    elif command -v apt-get &>/dev/null; then
+      sudo apt-get install -y -qq fzf
+    elif command -v yum &>/dev/null; then
+      sudo yum install -y fzf
+    elif command -v pacman &>/dev/null; then
+      sudo pacman -S --noconfirm fzf
+    else
+      git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all --no-bash --no-fish
+    fi
+  else
+    ok "fzf"
+  fi
 }
 
 # ========== Module: p10k ==========
@@ -322,7 +338,7 @@ run_status() {
     "Oh My Zsh:test -d $HOME/.oh-my-zsh"
     "zsh-autosuggestions:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     "zsh-syntax-highlighting:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
-    "zsh-autocomplete:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autocomplete"
+    "fzf:command -v fzf"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
     "bashrc zsh switch:grep -q 'exec zsh' $HOME/.bashrc 2>/dev/null"
