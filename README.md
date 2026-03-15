@@ -50,7 +50,6 @@ dotfiles help         # Show usage
 ├── bashrc            # → appended to ~/.bashrc (auto zsh switch)
 ├── vimrc             # → ~/.vimrc
 ├── tmux.conf         # → ~/.tmux.conf
-├── gitconfig         # → ~/.gitconfig
 ├── p10k.zsh          # → ~/.p10k.zsh
 └── vim/
     ├── colors/
@@ -66,7 +65,7 @@ dotfiles help         # Show usage
 - **fzf** — Ctrl+R history search, Ctrl+T file search, Alt+C directory jump
 - **vim** — One Monokai colorscheme, sensible defaults
 - **tmux** — Mouse support, 256 colors
-- **git** — Useful aliases, rebase pull, auto remote setup
+- **git** — Not managed (user-specific per machine)
 - **bashrc** — Auto-switch to zsh (appends, never overwrites)
 - **HPC** — Environment Modules support for Linux servers
 - **Fonts** — MesloLGS NF auto-downloaded + symbol check
@@ -96,7 +95,7 @@ p10k configure    # Set up your prompt style (optional, config included)
 ## Uninstall
 
 ```bash
-rm ~/.zshrc ~/.vimrc ~/.tmux.conf ~/.gitconfig ~/.p10k.zsh
+rm ~/.zshrc ~/.vimrc ~/.tmux.conf ~/.p10k.zsh
 rm -rf ~/.vim/colors/onedark.vim ~/.vim/colors/one-monokai.vim ~/.vim/autoload/onedark.vim
 rm -rf ~/dotfiles
 # Restore backups if needed
