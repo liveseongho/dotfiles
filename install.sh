@@ -162,16 +162,12 @@ install_plugins() {
   # fzf
   if ! command -v fzf &>/dev/null; then
     info "Installing fzf..."
-    if [ "$OS" = "Darwin" ]; then
+    if [ "$OS" = "Darwin" ] && command -v brew &>/dev/null; then
       brew install fzf
-    elif command -v apt-get &>/dev/null; then
-      sudo apt-get install -y -qq fzf
-    elif command -v yum &>/dev/null; then
-      sudo yum install -y fzf
-    elif command -v pacman &>/dev/null; then
-      sudo pacman -S --noconfirm fzf
     else
-      git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all --no-bash --no-fish
+      # No sudo needed — installs to ~/.fzf
+      git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+      ~/.fzf/install --all --no-bash --no-fish --no-update-rc
     fi
   else
     ok "fzf"
