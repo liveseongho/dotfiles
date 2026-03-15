@@ -149,11 +149,17 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 echo "  Check that all symbols below render correctly:"
 echo ""
-echo "  Powerline:                "
-echo "  Nerd Font:     󰊖         "
-echo "  Git icons:              "
-echo "  Arrows:                "
-echo "  Box drawing:   ╭─╮│ │╰─╯"
+/usr/bin/python3 -c "
+symbols = [
+    ('Powerline',  '\ue0b0 \ue0b2 \ue0b1 \ue0b3'),
+    ('Nerd Font',  '\uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7'),
+    ('Git icons',  '\ue725 \ue728 \uf418 \uf417'),
+    ('Arrows',     '\uf061 \uf060 \uf062 \uf063'),
+    ('Box drawing', '\u256d\u2500\u256e\u2502 \u2502\u2570\u2500\u256f'),
+]
+for label, chars in symbols:
+    print(f'  {label:14s} {chars}')
+"
 echo ""
 echo -e "  ${GREEN}All symbols visible? You're good to go!${NC}"
 echo -e "  ${YELLOW}Broken symbols? Change your terminal font to 'MesloLGS NF'${NC}"
