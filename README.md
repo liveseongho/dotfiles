@@ -33,10 +33,10 @@ dotfiles help         # Show usage
 |--------|-------------|
 | `deps` | System dependencies (zsh, git, curl, python3, Homebrew on macOS) |
 | `omz` | Oh My Zsh |
-| `plugins` | zsh-autosuggestions, zsh-syntax-highlighting |
+| `plugins` | zsh-autosuggestions, zsh-syntax-highlighting, fzf |
 | `p10k` | Powerlevel10k theme |
 | `fonts` | MesloLGS NF fonts (auto-downloaded) |
-| `vim` | Vim config + One Dark colorscheme |
+| `vim` | Vim config + One Monokai colorscheme |
 | `symlinks` | Symlink all config files to `~/dotfiles/` |
 | `macos` | macOS preferences (key repeat, hidden files) |
 
@@ -44,16 +44,32 @@ dotfiles help         # Show usage
 
 ```
 ~/dotfiles/
-├── install.sh      # Modular installer
-├── zshrc           # → ~/.zshrc
-├── vimrc           # → ~/.vimrc
-├── tmux.conf       # → ~/.tmux.conf
-├── gitconfig       # → ~/.gitconfig
-├── p10k.zsh        # → ~/.p10k.zsh
+├── install.sh        # Modular installer
+├── bin/dotfiles      # CLI wrapper (dotfiles update/status/...)
+├── zshrc             # → ~/.zshrc
+├── bashrc            # → appended to ~/.bashrc (auto zsh switch)
+├── vimrc             # → ~/.vimrc
+├── tmux.conf         # → ~/.tmux.conf
+├── gitconfig         # → ~/.gitconfig
+├── p10k.zsh          # → ~/.p10k.zsh
 └── vim/
-    ├── colors/onedark.vim
-    └── autoload/onedark.vim
+    ├── colors/
+    │   ├── one-monokai.vim
+    │   └── onedark.vim
+    └── autoload/
+        └── onedark.vim
 ```
+
+## Features
+
+- **zsh** — Oh My Zsh + Powerlevel10k + autosuggestions + syntax highlighting
+- **fzf** — Ctrl+R history search, Ctrl+T file search, Alt+C directory jump
+- **vim** — One Monokai colorscheme, sensible defaults
+- **tmux** — Mouse support, 256 colors
+- **git** — Useful aliases, rebase pull, auto remote setup
+- **bashrc** — Auto-switch to zsh (appends, never overwrites)
+- **HPC** — Environment Modules support for Linux servers
+- **Fonts** — MesloLGS NF auto-downloaded + symbol check
 
 ## Requirements
 
@@ -63,15 +79,13 @@ dotfiles help         # Show usage
 | git, curl, zsh | Auto-installed on Linux (apt, yum, pacman, apk) |
 | Python >= 3.7 | Optional (for font symbol check) |
 | Homebrew | Auto-installed on macOS |
-
-### Python compatibility
-
-The font symbol check requires Python >= 3.7. Both `python3` and `python` binaries are detected automatically. If Python is not available, the font check is skipped and all other modules install normally.
+| sudo | Not required (fzf installs to ~/.fzf on Linux) |
 
 ## Supported platforms
 
 - **macOS** (Apple Silicon & Intel)
 - **Linux** — Ubuntu/Debian (apt), CentOS/RHEL (yum), Arch (pacman), Alpine (apk)
+- **HPC servers** — Environment Modules compatible, no sudo required
 
 ## After install
 
@@ -83,7 +97,8 @@ p10k configure    # Set up your prompt style (optional, config included)
 
 ```bash
 rm ~/.zshrc ~/.vimrc ~/.tmux.conf ~/.gitconfig ~/.p10k.zsh
-rm -rf ~/.vim/colors/onedark.vim ~/.vim/autoload/onedark.vim
+rm -rf ~/.vim/colors/onedark.vim ~/.vim/colors/one-monokai.vim ~/.vim/autoload/onedark.vim
+rm -rf ~/dotfiles
 # Restore backups if needed
 ls ~/.*backup* 2>/dev/null
 ```
