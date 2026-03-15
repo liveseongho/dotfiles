@@ -120,12 +120,7 @@ install_deps() {
     warn "Python not found (optional, needed for font check)"
   fi
 
-  # Git config
-  if [ -z "$(git config --global user.name)" ]; then
-    info "Setting git config..."
-    git config --global user.name "liveseongho"
-    git config --global user.email "liveseongho@gmail.com"
-  fi
+  # Git config: skip — user sets their own name/email per machine
 }
 
 # ========== Module: omz ==========
