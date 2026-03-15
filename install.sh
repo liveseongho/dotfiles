@@ -182,7 +182,8 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 echo "  Check that all symbols below render correctly:"
 echo ""
-python3 -c "
+if command -v python3 &>/dev/null; then
+  python3 -c "
 symbols = [
     ('Powerline',  '\ue0b0 \ue0b2 \ue0b1 \ue0b3'),
     ('Nerd Font',  '\uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7'),
@@ -193,6 +194,10 @@ symbols = [
 for label, chars in symbols:
     print(f'  {label:14s} {chars}')
 "
+else
+  warn "python3 not found, skipping symbol check"
+  echo "  Run 'p10k configure' to verify your font setup"
+fi
 echo ""
 echo -e "  ${GREEN}All symbols visible? You're good to go!${NC}"
 echo -e "  ${YELLOW}Broken symbols? Change your terminal font to 'MesloLGS NF'${NC}"
