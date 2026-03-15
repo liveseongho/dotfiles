@@ -271,7 +271,7 @@ install_symlinks() {
   fi
   link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
-  link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
+  # gitconfig: skip — user-specific (name, email)
   link_file "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
 }
 
@@ -341,7 +341,7 @@ run_status() {
     "Symlink .zshrc:test -L $HOME/.zshrc"
     "Symlink .vimrc:test -L $HOME/.vimrc"
     "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
-    "Symlink .gitconfig:test -L $HOME/.gitconfig"
+
     "Symlink .p10k.zsh:test -L $HOME/.p10k.zsh"
   )
 
