@@ -210,9 +210,18 @@ install_vim() {
   header "Vim"
 
   mkdir -p "$HOME/.vim/colors" "$HOME/.vim/autoload"
-  cp -f "$DOTFILES_DIR/vim/colors/onedark.vim" "$HOME/.vim/colors/" 2>/dev/null
-  cp -f "$DOTFILES_DIR/vim/autoload/onedark.vim" "$HOME/.vim/autoload/" 2>/dev/null
-  ok "One Dark colorscheme"
+
+  # Copy all colorschemes and autoload files from dotfiles
+  if [ -d "$DOTFILES_DIR/vim/colors" ]; then
+    cp -f "$DOTFILES_DIR/vim/colors/"*.vim "$HOME/.vim/colors/" 2>/dev/null
+  fi
+  if [ -d "$DOTFILES_DIR/vim/autoload" ]; then
+    cp -f "$DOTFILES_DIR/vim/autoload/"*.vim "$HOME/.vim/autoload/" 2>/dev/null
+  fi
+
+  # Show active colorscheme from vimrc
+  local scheme=$(grep "^colorscheme" "$DOTFILES_DIR/vimrc" 2>/dev/null | awk '{print $2}')
+  ok "Vim colorscheme: ${scheme:-default}"
 }
 
 # ========== Module: symlinks ==========
@@ -300,7 +309,7 @@ run_status() {
     "zsh-autosuggestions:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     "zsh-syntax-highlighting:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-    "Vim One Dark:test -f $HOME/.vim/colors/onedark.vim"
+    "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
     "Symlink .zshrc:test -L $HOME/.zshrc"
     "Symlink .vimrc:test -L $HOME/.vimrc"
     "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
