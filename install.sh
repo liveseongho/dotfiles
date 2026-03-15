@@ -386,7 +386,10 @@ case "${1:-}" in
     ;;
   "update")
     info "Pulling latest from GitHub..."
-    cd "$DOTFILES_DIR" && git pull --rebase origin main
+    cd "$DOTFILES_DIR"
+    git stash -q 2>/dev/null
+    git pull --rebase origin main
+    git stash pop -q 2>/dev/null
     echo ""
     info "Re-running with latest version..."
     exec "$DOTFILES_DIR/install.sh" _update_run
