@@ -3,10 +3,11 @@
 # One-command install:
 #   curl -fsSL https://raw.githubusercontent.com/liveseongho/dotfiles/main/install.sh | bash
 #
-# Usage:
-#   ./install.sh           # Full install (all modules)
-#   ./install.sh update    # Re-check and install missing parts
-#   ./install.sh <module>  # Install specific module only
+# After install, use:
+#   dotfiles              # Full install (all modules)
+#   dotfiles update       # Re-check and install missing parts
+#   dotfiles status       # Show installation status
+#   dotfiles <module>     # Install specific module only
 #
 # Modules: deps, omz, plugins, p10k, fonts, vim, symlinks, macos
 

@@ -33,6 +33,7 @@ setopt share_history
 setopt inc_append_history
 
 # ========== PATH ==========
+export PATH="$HOME/dotfiles/bin:$PATH"
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 

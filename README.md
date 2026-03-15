@@ -17,12 +17,14 @@ cd ~/dotfiles && ./install.sh
 
 ## Commands
 
+After install, `dotfiles` is available globally:
+
 ```bash
-./install.sh            # Full install (all modules)
-./install.sh update     # Re-check and install missing parts
-./install.sh status     # Show what's installed and what's missing
-./install.sh <module>   # Install specific module only
-./install.sh help       # Show usage
+dotfiles              # Full install (all modules)
+dotfiles update       # Re-check and install missing parts
+dotfiles status       # Show what's installed and what's missing
+dotfiles <module>     # Install specific module only
+dotfiles help         # Show usage
 ```
 
 ## Modules
