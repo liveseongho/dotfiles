@@ -243,7 +243,19 @@ install_symlinks() {
   }
 
   link_file "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
-  link_file "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"
+  # bashrc: append zsh auto-switch instead of overwriting
+  if [ -f "$HOME/.bashrc" ]; then
+    if ! grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
+      info "Appending zsh auto-switch to existing .bashrc"
+      echo "" >> "$HOME/.bashrc"
+      cat "$DOTFILES_DIR/bashrc" >> "$HOME/.bashrc"
+      ok "Appended to .bashrc"
+    else
+      ok ".bashrc already has zsh switch"
+    fi
+  else
+    link_file "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
+  fi
   link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
   link_file "$DOTFILES_DIR/gitconfig" "$HOME/.gitconfig"
