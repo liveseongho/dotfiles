@@ -141,12 +141,32 @@ if [ "$OS" = "Darwin" ]; then
   ok "macOS preferences applied"
 fi
 
-# ========== Done ==========
+# ========== Font check ==========
 echo ""
+echo -e "${CYAN}========================================${NC}"
+echo -e "${CYAN} 🔤 Font Check (MesloLGS NF)${NC}"
+echo -e "${CYAN}========================================${NC}"
+echo ""
+echo "  아래 심볼들이 모두 정상적으로 보이는지 확인하세요:"
+echo ""
+echo "  Powerline:     \ue0b0 \ue0b2 \ue0b1 \ue0b3"
+echo "  Nerd Font:     \uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7"
+echo "  Git icons:     \ue725 \ue728 \uf418 \uf417"
+echo "  Arrows:        \uf061 \uf060 \uf062 \uf063"
+echo "  Box drawing:   ╭─╮│ │╰─╯"
+echo ""
+echo -e "  ${GREEN}✅ 모두 보이면 OK!${NC}"
+echo -e "  ${YELLOW}⚠️  깨져 보이면 터미널 설정에서 폰트를 'MesloLGS NF'로 변경하세요${NC}"
+echo ""
+echo "  iTerm2:    Preferences → Profiles → Text → Font → MesloLGS NF"
+echo "  Terminal:  Preferences → Profiles → Font → Change → MesloLGS NF"
+echo "  VS Code:   Settings → Terminal Font → 'MesloLGS NF'"
+echo ""
+
+# ========== Done ==========
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN} ✅ Dotfiles installed successfully!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "  Restart your terminal or run: source ~/.zshrc"
-echo "  Then run: p10k configure"
 echo ""
