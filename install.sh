@@ -182,8 +182,15 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 echo "  Check that all symbols below render correctly:"
 echo ""
+PYTHON=""
 if command -v python3 &>/dev/null; then
-  python3 -c "
+  PYTHON="python3"
+elif command -v python &>/dev/null && python -c "import sys; assert sys.version_info[0]>=3" 2>/dev/null; then
+  PYTHON="python"
+fi
+
+if [ -n "$PYTHON" ]; then
+  $PYTHON -c "
 symbols = [
     ('Powerline',  '\ue0b0 \ue0b2 \ue0b1 \ue0b3'),
     ('Nerd Font',  '\uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7'),
