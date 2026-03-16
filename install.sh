@@ -7,6 +7,7 @@
 #   dotfiles              # Full install (all modules)
 #   dotfiles update       # Re-check and install missing parts
 #   dotfiles status       # Show installation status
+#   dotfiles uninstall    # Remove dotfiles (backup + restore originals)
 #   dotfiles <module>     # Install specific module only
 #
 # Modules: deps, omz, plugins, p10k, fonts, vim, symlinks, macos
@@ -680,7 +681,7 @@ case "${1:-}" in
   "status")
     run_status
     ;;
-  "delete"|"uninstall"|"remove")
+  "uninstall"|"delete"|"remove")
     DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
     LOCAL_CONF="$DOTFILES_DIR/local.conf"
     run_delete
@@ -692,7 +693,7 @@ case "${1:-}" in
     echo "  install    Full install (default)"
     echo "  update     Re-check and install missing parts"
     echo "  status     Show installation status"
-    echo "  delete     Uninstall dotfiles (backup + restore originals)"
+    echo "  uninstall  Remove dotfiles (backup + restore originals)"
     echo "  help       Show this help"
     echo ""
     echo "Modules: $ALL_MODULES"
