@@ -78,9 +78,18 @@ create_local_conf() {
     *) chosen_mode="link" ;;
   esac
 
-  # bashrc: default to append (safe on servers with existing bashrc)
-  if [ -f "$HOME/.bashrc" ] && ! [ -L "$HOME/.bashrc" ]; then
-    info ".bashrc already exists — defaulting to append (safe)"
+  # Detect existing non-symlink rc files → default to append (safe on servers)
+  local has_existing_rc=false
+  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+    if [ -f "$rc" ] && ! [ -L "$rc" ]; then
+      has_existing_rc=true
+      break
+    fi
+  done
+
+  if [ "$has_existing_rc" = true ]; then
+    info "Existing rc files detected — defaulting to append (preserves your config)"
+    chosen_mode="append"
     bashrc_mode="append"
   else
     read -rp "  .bashrc mode? [link/append] (default: append): " bashrc_mode
