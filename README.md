@@ -120,7 +120,7 @@ MesloLGS NF is auto-installed by the `fonts` module. If symbols look broken, set
 
 | Requirement | Status |
 |-------------|--------|
-| macOS / Linux | ✅ Both supported |
+| macOS / Linux | Both supported |
 | git, curl, zsh | Auto-installed on Linux |
 | Python >= 3.7 | Optional (for font symbol check) |
 | Homebrew | Auto-installed on macOS |
