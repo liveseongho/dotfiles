@@ -450,8 +450,8 @@ install_macos() {
 
   header "macOS Preferences"
 
-  defaults write NSGlobalDomain KeyRepeat -int 2
-  defaults write NSGlobalDomain InitialKeyRepeat -int 15
+  defaults write NSGlobalDomain KeyRepeat -int 3
+  defaults write NSGlobalDomain InitialKeyRepeat -int 20
   defaults write com.apple.finder AppleShowAllFiles -bool true
   ok "Key repeat, hidden files"
 }
