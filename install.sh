@@ -329,15 +329,14 @@ install_symlinks() {
   link_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
 
   # Summary of .local files
-  echo ""
-  info "Local overrides:"
+  header "Local Overrides"
   for lf in "$HOME/.zshrc.local" "$HOME/.bashrc.local" "$HOME/.vimrc.local" "$HOME/.tmux.conf.local"; do
     local name="$(basename "$lf")"
     if [ -f "$lf" ]; then
       local lines=$(wc -l < "$lf" | tr -d ' ')
-      echo -e "  ${GREEN}✓${NC} $name ${CYAN}(${lines} lines)${NC}"
+      ok "$name ($lines lines)"
     else
-      echo -e "  ${YELLOW}✗${NC} $name ${YELLOW}(0 lines)${NC}"
+      warn "$name (0 lines)"
     fi
   done
 }
@@ -427,31 +426,22 @@ run_font_check() {
 
   local py=$(detect_python)
 
+  local py=$(detect_python)
   if [ -n "$py" ] && check_python_version "$py"; then
-    echo ""
-    echo "  Check that all symbols below render correctly:"
-    echo ""
     $py -c "
 symbols = [
     ('Powerline',  '\ue0b0 \ue0b2 \ue0b1 \ue0b3'),
     ('Nerd Font',  '\uf296 \uf120 \uf1d3 \uf09b \ue711 \uf0e7'),
     ('Git icons',  '\ue725 \ue728 \uf418 \uf417'),
     ('Arrows',     '\uf061 \uf060 \uf062 \uf063'),
-    ('Box drawing', '\u256d\u2500\u256e\u2502 \u2502\u2570\u2500\u256f'),
+    ('Box',        '\u256d\u2500\u256e\u2502 \u2502\u2570\u2500\u256f'),
 ]
 for label, chars in symbols:
-    print(f'  {label:14s} {chars}')
+    print(f'\033[0;32m[ok]\033[0m {label:14s} {chars}')
 "
-    echo ""
-    echo -e "  ${GREEN}All symbols visible? You're good to go!${NC}"
-    echo -e "  ${YELLOW}Broken symbols? Change your terminal font to 'MesloLGS NF'${NC}"
-    echo ""
-    echo "  iTerm2:    Preferences > Profiles > Text > Font > MesloLGS NF"
-    echo "  Terminal:  Preferences > Profiles > Font > Change > MesloLGS NF"
-    echo "  VS Code:   Settings > Terminal Font > 'MesloLGS NF'"
+    echo -e "${YELLOW}[!!]${NC} Broken symbols? Set terminal font to ${BOLD}MesloLGS NF${NC}"
   else
-    warn "Python >= $MIN_PYTHON_VERSION not found, skipping symbol check"
-    echo "  Run 'p10k configure' to verify your font setup"
+    warn "Python >= $MIN_PYTHON_VERSION not found — run 'p10k configure' to verify fonts"
   fi
 }
 
@@ -499,15 +489,14 @@ run_status() {
 
   echo ""
   if [ "$missing" -eq 0 ]; then
-    echo -e "  ${GREEN}✅ All $total checks passed${NC}${pyver:+ · Python $pyver}"
+    ok "All $total checks passed${pyver:+ · Python $pyver}"
   else
-    echo -e "  ${GREEN}✓ $((total - missing))/$total passed${NC}${pyver:+ · Python $pyver}"
-    echo ""
+    ok "$((total - missing))/$total passed${pyver:+ · Python $pyver}"
     for name in "${missing_names[@]}"; do
-      echo -e "  ${YELLOW}✗ $name${NC}"
+      warn "$name — not installed"
     done
     echo ""
-    echo -e "  Run ${CYAN}dotfiles update${NC} to fix."
+    info "Run 'dotfiles update' to fix."
   fi
 }
 
