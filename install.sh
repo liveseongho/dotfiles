@@ -540,6 +540,120 @@ run_all() {
   echo ""
 }
 
+# ========== Uninstall ==========
+run_delete() {
+  header "Uninstall Dotfiles"
+
+  echo -e "  ${RED}This will remove all dotfiles symlinks/copies and restore backups.${NC}"
+  echo ""
+  read -rp "  Are you sure? [y/N] " answer
+  case "${answer}" in
+    [Yy]*) ;;
+    *)
+      info "Cancelled."
+      return
+      ;;
+  esac
+
+  local BACKUP_DIR="$HOME/.dotfiles-backup.$(date +%Y%m%d%H%M%S)"
+  mkdir -p "$BACKUP_DIR"
+  info "Backup directory: $BACKUP_DIR"
+
+  # Remove dotfile if it's ours (symlink to dotfiles/ or installed by us)
+  remove_dotfile() {
+    local dst="$1" name
+    name="$(basename "$dst")"
+
+    if [ ! -f "$dst" ] && [ ! -L "$dst" ]; then
+      info "$name — not present, skipping"
+      return
+    fi
+
+    # Move current file to backup dir
+    mv "$dst" "$BACKUP_DIR/$name"
+    ok "Removed $name → backed up to $BACKUP_DIR/$name"
+
+    # Restore most recent .backup file if one exists
+    local latest_backup
+    latest_backup=$(ls -t "${dst}.backup."* 2>/dev/null | head -1)
+    if [ -n "$latest_backup" ]; then
+      mv "$latest_backup" "$dst"
+      ok "Restored $name from $(basename "$latest_backup")"
+    fi
+  }
+
+  remove_dotfile "$HOME/.zshrc"
+  remove_dotfile "$HOME/.vimrc"
+  remove_dotfile "$HOME/.tmux.conf"
+  remove_dotfile "$HOME/.p10k.zsh"
+  remove_dotfile "$HOME/.gitconfig"
+
+  # bashrc: if it has our zsh switch, remove those lines
+  if [ -f "$HOME/.bashrc" ]; then
+    if grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
+      cp "$HOME/.bashrc" "$BACKUP_DIR/.bashrc"
+      # Remove the appended block (from our bashrc marker to end, or just the exec zsh lines)
+      sed -i.bak '/# Auto-switch to zsh/,/exec zsh/d' "$HOME/.bashrc" 2>/dev/null || \
+        sed -i '' '/# Auto-switch to zsh/,/exec zsh/d' "$HOME/.bashrc" 2>/dev/null
+      # If that didn't work (no marker), just remove exec zsh line
+      if grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
+        sed -i.bak '/exec zsh/d' "$HOME/.bashrc" 2>/dev/null || \
+          sed -i '' '/exec zsh/d' "$HOME/.bashrc" 2>/dev/null
+      fi
+      rm -f "$HOME/.bashrc.bak"
+      ok "Removed zsh switch from .bashrc (backed up to $BACKUP_DIR/.bashrc)"
+    fi
+  fi
+
+  # Remove vim colorschemes/autoload we installed
+  if [ -d "$HOME/.vim/colors" ]; then
+    if [ -d "$DOTFILES_DIR/vim/colors" ]; then
+      for f in "$DOTFILES_DIR/vim/colors/"*.vim; do
+        local name="$(basename "$f")"
+        if [ -f "$HOME/.vim/colors/$name" ]; then
+          mv "$HOME/.vim/colors/$name" "$BACKUP_DIR/$name"
+          ok "Removed vim color: $name"
+        fi
+      done
+    fi
+  fi
+
+  # Remove local.conf
+  if [ -f "$LOCAL_CONF" ]; then
+    mv "$LOCAL_CONF" "$BACKUP_DIR/local.conf"
+    ok "Removed local.conf"
+  fi
+
+  # Clean up old .backup files
+  echo ""
+  local backup_count
+  backup_count=$(ls "$HOME"/.*.backup.* 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$backup_count" -gt 0 ]; then
+    read -rp "  Also clean up $backup_count old .backup files in \$HOME? [y/N] " clean_answer
+    case "${clean_answer}" in
+      [Yy]*)
+        mv "$HOME"/.*.backup.* "$BACKUP_DIR/" 2>/dev/null
+        ok "Moved old backups to $BACKUP_DIR/"
+        ;;
+      *)
+        info "Keeping old backup files"
+        ;;
+    esac
+  fi
+
+  echo ""
+  echo -e "${GREEN}========================================${NC}"
+  echo -e "${GREEN} ✅ Dotfiles uninstalled${NC}"
+  echo -e "${GREEN}========================================${NC}"
+  echo ""
+  echo "  All removed files backed up to: $BACKUP_DIR"
+  echo "  The dotfiles repo itself ($DOTFILES_DIR) was NOT deleted."
+  echo "  To fully remove: rm -rf $DOTFILES_DIR"
+  echo ""
+  echo "  Restart your terminal for changes to take effect."
+  echo ""
+}
+
 case "${1:-}" in
   ""|"install")
     run_all
@@ -566,6 +680,11 @@ case "${1:-}" in
   "status")
     run_status
     ;;
+  "delete"|"uninstall"|"remove")
+    DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
+    LOCAL_CONF="$DOTFILES_DIR/local.conf"
+    run_delete
+    ;;
   "help"|"--help"|"-h")
     echo "Usage: ./install.sh [command]"
     echo ""
@@ -573,6 +692,7 @@ case "${1:-}" in
     echo "  install    Full install (default)"
     echo "  update     Re-check and install missing parts"
     echo "  status     Show installation status"
+    echo "  delete     Uninstall dotfiles (backup + restore originals)"
     echo "  help       Show this help"
     echo ""
     echo "Modules: $ALL_MODULES"
