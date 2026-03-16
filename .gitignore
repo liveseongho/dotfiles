@@ -4,3 +4,4 @@
 *.swo
 *~
 local.conf
+*.local
