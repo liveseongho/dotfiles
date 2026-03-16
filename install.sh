@@ -513,7 +513,7 @@ run_all() {
 
   echo ""
   echo -e "${GREEN}========================================${NC}"
-  echo -e "${GREEN} ✅ Dotfiles installed successfully!${NC}"
+  echo -e "${GREEN}  Dotfiles installed successfully!${NC}"
   echo -e "${GREEN}========================================${NC}"
   echo ""
   echo "  Restart your terminal or run: source ~/.zshrc"
@@ -646,7 +646,7 @@ run_delete() {
 
   echo ""
   echo -e "${GREEN}========================================${NC}"
-  echo -e "${GREEN} ✅ Dotfiles uninstalled${NC}"
+  echo -e "${GREEN}  Dotfiles uninstalled${NC}"
   echo -e "${GREEN}========================================${NC}"
   echo ""
   echo "  All removed files backed up to: $BACKUP_DIR"
