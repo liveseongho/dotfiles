@@ -144,6 +144,10 @@ install_deps() {
   header "Dependencies"
 
   if [ "$OS" = "Darwin" ]; then
+    # Ensure brew is in PATH (curl|bash doesn't load shell profile)
+    [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+    [ -x /usr/local/bin/brew ] && eval "$(/usr/local/bin/brew shellenv)"
+
     if ! command -v brew &>/dev/null; then
       info "Installing Homebrew..."
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
