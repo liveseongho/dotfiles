@@ -338,6 +338,19 @@ install_symlinks() {
     local src="$1" dst="$2"
     local name="$(basename "$dst")"
 
+    # If dst is a symlink, replace with a regular file first
+    if [ -L "$dst" ]; then
+      local target="$(readlink "$dst")"
+      rm "$dst"
+      # If it was pointing at our dotfiles source, start with empty file
+      if [ "$target" = "$src" ]; then
+        touch "$dst"
+      else
+        cp "$target" "$dst"
+      fi
+      info "$name — converted symlink to file for append mode"
+    fi
+
     # Check if marker block already exists and is up to date
     if [ -f "$dst" ] && grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
       # Extract current block content (between markers)
