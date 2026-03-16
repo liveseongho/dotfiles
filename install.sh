@@ -65,37 +65,6 @@ create_local_conf() {
   echo ""
 
   # Symlink mode
-  info "How should dotfiles be installed?"
-  echo -e "  ${CYAN}link${NC}   — symlink to dotfiles/ (stays synced with repo)"
-  echo -e "  ${CYAN}append${NC} — inject as marked block (preserves existing config)"
-  echo ""
-
-  local default_mode="link"
-  read -rp "  Default mode for rc files? [link/append] (default: link): " chosen_mode
-  chosen_mode="${chosen_mode:-$default_mode}"
-  case "$chosen_mode" in
-    link|append) ;;
-    *) chosen_mode="link" ;;
-  esac
-
-  # Detect existing non-symlink rc files → default to append (safe on servers)
-  local has_existing_rc=false
-  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
-    if [ -f "$rc" ] && ! [ -L "$rc" ]; then
-      has_existing_rc=true
-      break
-    fi
-  done
-
-  if [ "$has_existing_rc" = true ]; then
-    info "Existing rc files detected — defaulting to append (preserves your config)"
-    chosen_mode="append"
-    bashrc_mode="append"
-  else
-    read -rp "  .bashrc mode? [link/append] (default: append): " bashrc_mode
-    bashrc_mode="${bashrc_mode:-append}"
-  fi
-
   cat > "$LOCAL_CONF" <<EOF
 # local.conf — Machine-specific dotfiles configuration
 # Generated: $(date +%Y-%m-%d)
@@ -104,16 +73,6 @@ create_local_conf() {
 # ========== Git ==========
 GIT_USER_NAME="$git_name"
 GIT_USER_EMAIL="$git_email"
-
-# ========== Symlink mode ==========
-# link = symlink to dotfiles/ (stays synced)
-# append = inject as marked block (preserves existing config)
-ZSHRC_MODE="$chosen_mode"
-BASHRC_MODE="$bashrc_mode"
-VIMRC_MODE="$chosen_mode"
-TMUX_MODE="$chosen_mode"
-P10K_MODE="$chosen_mode"
-# gitconfig: managed via git config --global
 EOF
 
   echo ""
@@ -325,94 +284,51 @@ install_vim() {
   ok "Vim colorscheme: ${scheme:-default} ($HOME/.vim/colors/)"
 }
 
-MARKER_BEGIN="# >>> dotfiles >>>"
-MARKER_END="# <<< dotfiles <<<"
-
 # ========== Module: symlinks ==========
 install_symlinks() {
   header "Symlinks"
 
-  # Link: symlink to dotfiles/
   link_dotfile() {
-    local src="$1" dst="$2"
+    local src="$1" dst="$2" local_file="${dst}.local"
 
+    # Already correct symlink
     if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
-      ok "$dst → $src (linked)"
+      ok "$dst → $src"
       return
     fi
 
-    # Existing file — backup first
-    if [ -f "$dst" ] || [ -L "$dst" ]; then
+    # Existing non-symlink file — backup and migrate to .local
+    if [ -f "$dst" ] && ! [ -L "$dst" ]; then
       local backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
-      mv "$dst" "$backup"
+      cp "$dst" "$backup"
       warn "Backed up $dst → $backup"
+
+      # If .local doesn't exist yet, move existing content there
+      if [ ! -f "$local_file" ]; then
+        mv "$dst" "$local_file"
+        ok "Migrated $(basename "$dst") → $(basename "$local_file") (your custom config preserved)"
+      else
+        rm "$dst"
+      fi
+    elif [ -L "$dst" ]; then
+      # Wrong symlink target — remove
+      rm "$dst"
     fi
 
     ln -sf "$src" "$dst"
-    ok "$dst → $src (linked)"
-  }
+    ok "$dst → $src"
 
-  # Append: inject dotfiles content as a marked block
-  append_dotfile() {
-    local src="$1" dst="$2"
-    local name="$(basename "$dst")"
-
-    # If dst is a symlink, replace with a regular file first
-    if [ -L "$dst" ]; then
-      local target="$(readlink "$dst")"
-      rm "$dst"
-      if [ "$target" = "$src" ]; then
-        touch "$dst"
-      else
-        cp "$target" "$dst"
-      fi
-      info "$dst — converted symlink to file for append mode"
+    # Hint about .local
+    if [ ! -f "$local_file" ]; then
+      info "  Tip: create $(basename "$local_file") for machine-specific config"
     fi
-
-    # Check if marker block already exists and is up to date
-    if [ -f "$dst" ] && grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
-      local current
-      current=$(sed -n "/$MARKER_BEGIN/,/$MARKER_END/{/$MARKER_BEGIN/d;/$MARKER_END/d;p;}" "$dst")
-      local new_content
-      new_content=$(cat "$src")
-
-      if [ "$current" = "$new_content" ]; then
-        ok "$dst ← $src (appended, up to date)"
-        return
-      fi
-
-      sed -i.bak "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null || \
-        sed -i '' "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null
-      rm -f "${dst}.bak"
-      info "$dst — updating dotfiles block"
-    fi
-
-    [ -f "$dst" ] || touch "$dst"
-
-    {
-      echo ""
-      echo "$MARKER_BEGIN"
-      cat "$src"
-      echo "$MARKER_END"
-    } >> "$dst"
-    ok "$dst ← $src (appended)"
   }
 
-  # Install based on mode
-  install_dotfile() {
-    local src="$1" dst="$2" mode="$3"
-    case "$mode" in
-      link)   link_dotfile "$src" "$dst" ;;
-      append) append_dotfile "$src" "$dst" ;;
-      *)      err "Unknown mode '$mode' for $(basename "$dst")" ;;
-    esac
-  }
-
-  install_dotfile "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"     "${ZSHRC_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"     "${VIMRC_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf" "${TMUX_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"  "${P10K_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-append}"
+  link_dotfile "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
+  link_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"
+  link_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
+  link_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
+  link_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
 }
 
 # ========== Module: gitconfig ==========
@@ -542,11 +458,11 @@ run_status() {
     "fzf:command -v fzf"
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
-    "bashrc zsh switch:grep -q 'exec zsh' $HOME/.bashrc 2>/dev/null"
-    ".zshrc:test -e $HOME/.zshrc"
-    ".vimrc:test -e $HOME/.vimrc"
-    ".tmux.conf:test -e $HOME/.tmux.conf"
-    ".p10k.zsh:test -e $HOME/.p10k.zsh"
+    ".zshrc:test -L $HOME/.zshrc"
+    ".bashrc:test -L $HOME/.bashrc"
+    ".vimrc:test -L $HOME/.vimrc"
+    ".tmux.conf:test -L $HOME/.tmux.conf"
+    ".p10k.zsh:test -L $HOME/.p10k.zsh"
     ".gitconfig:test -f $HOME/.gitconfig"
     "local.conf:test -f $DOTFILES_DIR/local.conf"
   )
@@ -669,40 +585,18 @@ run_delete() {
     fi
   }
 
-  # Remove marker block from a file (for append-mode dotfiles)
-  remove_dotfile_block() {
-    local dst="$1" name
-    name="$(basename "$dst")"
-
-    if [ ! -f "$dst" ]; then
-      info "$name — not present, skipping"
-      return
-    fi
-
-    if grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
-      cp "$dst" "$BACKUP_DIR/$name"
-      sed -i.bak "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null || \
-        sed -i '' "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null
-      rm -f "${dst}.bak"
-      # Remove trailing blank lines left behind
-      sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$dst" 2>/dev/null || \
-        sed -i '' -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$dst" 2>/dev/null
-      rm -f "${dst}.bak"
-      ok "$name — removed dotfiles block (backed up to $BACKUP_DIR/$name)"
-    else
-      info "$name — no dotfiles block found, skipping"
-    fi
-  }
-
-  # For each file: if it's a symlink (link mode), use remove_dotfile.
-  # If it's a regular file with markers (append mode), use remove_dotfile_block.
-  for dst in "$HOME/.zshrc" "$HOME/.vimrc" "$HOME/.tmux.conf" "$HOME/.p10k.zsh" "$HOME/.bashrc"; do
-    if [ -L "$dst" ]; then
-      remove_dotfile "$dst"
-    else
-      remove_dotfile_block "$dst"
-    fi
+  for dst in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.vimrc" "$HOME/.tmux.conf" "$HOME/.p10k.zsh"; do
+    remove_dotfile "$dst"
   done
+
+  # Note: .local files are intentionally preserved
+  local local_files=()
+  for lf in "$HOME/.zshrc.local" "$HOME/.bashrc.local" "$HOME/.vimrc.local" "$HOME/.tmux.conf.local"; do
+    [ -f "$lf" ] && local_files+=("$(basename "$lf")")
+  done
+  if [ ${#local_files[@]} -gt 0 ]; then
+    info "Kept local config files: ${local_files[*]}"
+  fi
 
   # gitconfig: only remove settings we added (keep user.name/email)
   header "Git Config Cleanup"

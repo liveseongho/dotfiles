@@ -73,3 +73,8 @@ alias tn='tmux new -s'
 # ========== Powerlevel10k ==========
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# ========== Local overrides ==========
+# Machine-specific config: conda init, module load, extra aliases, etc.
+# This file is NOT managed by dotfiles — your changes persist across updates.
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

@@ -54,3 +54,9 @@ nnoremap <Esc><Esc> :noh<CR>
 if !isdirectory(expand("~/.vim/undodir"))
   call mkdir(expand("~/.vim/undodir"), "p")
 endif
+
+" ========== Local overrides ==========
+" Machine-specific config. Not managed by dotfiles.
+if filereadable(expand("~/.vimrc.local"))
+  source ~/.vimrc.local
+endif
