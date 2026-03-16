@@ -328,20 +328,18 @@ install_symlinks() {
   link_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
 
-  # Summary of .local files
-  echo ""
-  info "Local overrides:"
-  local has_any=false
+  # Summary of .local files (only show if any exist)
+  local local_summary=""
   for lf in "$HOME/.zshrc.local" "$HOME/.bashrc.local" "$HOME/.vimrc.local" "$HOME/.tmux.conf.local"; do
-    local name="$(basename "$lf")"
     if [ -f "$lf" ]; then
       local lines=$(wc -l < "$lf" | tr -d ' ')
-      echo -e "  ${GREEN}✓${NC} $name ${CYAN}(${lines} lines)${NC}"
-      has_any=true
+      local_summary="${local_summary}\n  ${GREEN}✓${NC} $(basename "$lf") ${CYAN}(${lines} lines)${NC}"
     fi
   done
-  if [ "$has_any" = false ]; then
-    echo -e "  ${YELLOW}(none)${NC} — create ~/.zshrc.local etc. for machine-specific config"
+  if [ -n "$local_summary" ]; then
+    echo ""
+    info "Local overrides:"
+    echo -e "$local_summary"
   fi
 }
 
