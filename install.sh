@@ -585,7 +585,7 @@ run_delete() {
   mkdir -p "$BACKUP_DIR"
   info "Backup directory: $BACKUP_DIR"
 
-  # Remove dotfile if it's ours (symlink to dotfiles/ or installed by us)
+  # Remove dotfile and optionally restore from backup
   remove_dotfile() {
     local dst="$1" name
     name="$(basename "$dst")"
@@ -599,12 +599,35 @@ run_delete() {
     mv "$dst" "$BACKUP_DIR/$name"
     ok "Removed $name → backed up to $BACKUP_DIR/$name"
 
-    # Restore most recent .backup file if one exists
-    local latest_backup
-    latest_backup=$(ls -t "${dst}.backup."* 2>/dev/null | head -1)
-    if [ -n "$latest_backup" ]; then
-      mv "$latest_backup" "$dst"
-      ok "Restored $name from $(basename "$latest_backup")"
+    # Check for previous backups
+    local backups
+    backups=($(ls -t "${dst}.backup."* 2>/dev/null))
+
+    if [ ${#backups[@]} -gt 0 ]; then
+      echo ""
+      info "Found ${#backups[@]} backup(s) for $name:"
+      local i=1
+      for b in "${backups[@]}"; do
+        local ts=$(echo "$b" | grep -oE '[0-9]{14}$')
+        local pretty=""
+        if [ -n "$ts" ]; then
+          pretty="${ts:0:4}-${ts:4:2}-${ts:6:2} ${ts:8:2}:${ts:10:2}:${ts:12:2}"
+        fi
+        echo -e "  ${CYAN}[$i]${NC} $(basename "$b")${pretty:+  ($pretty)}"
+        i=$((i + 1))
+      done
+      echo -e "  ${CYAN}[0]${NC} Don't restore"
+      echo ""
+      read -rp "  Restore which backup? [0-$((${#backups[@]}))] (default: 0): " choice
+      choice="${choice:-0}"
+
+      if [ "$choice" -gt 0 ] 2>/dev/null && [ "$choice" -le "${#backups[@]}" ]; then
+        local selected="${backups[$((choice - 1))]}"
+        mv "$selected" "$dst"
+        ok "Restored $name from $(basename "$selected")"
+      else
+        info "Not restoring $name"
+      fi
     fi
   }
 
