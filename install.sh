@@ -78,8 +78,14 @@ create_local_conf() {
     *) chosen_mode="link" ;;
   esac
 
-  read -rp "  .bashrc mode? [link/append] (default: append): " bashrc_mode
-  bashrc_mode="${bashrc_mode:-append}"
+  # bashrc: default to append (safe on servers with existing bashrc)
+  if [ -f "$HOME/.bashrc" ] && ! [ -L "$HOME/.bashrc" ]; then
+    info ".bashrc already exists — defaulting to append (safe)"
+    bashrc_mode="append"
+  else
+    read -rp "  .bashrc mode? [link/append] (default: append): " bashrc_mode
+    bashrc_mode="${bashrc_mode:-append}"
+  fi
 
   cat > "$LOCAL_CONF" <<EOF
 # local.conf — Machine-specific dotfiles configuration
@@ -397,7 +403,7 @@ install_symlinks() {
   install_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"     "${VIMRC_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf" "${TMUX_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"  "${P10K_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-link}"
+  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-append}"
 }
 
 # ========== Module: gitconfig ==========
