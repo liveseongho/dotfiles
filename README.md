@@ -104,7 +104,7 @@ MesloLGS NF is auto-installed by the `fonts` module. If symbols look broken, set
 | **iTerm2** | Preferences → Profiles → Text → Font → `MesloLGS NF` |
 | **Terminal.app** | Preferences → Profiles → Font → Change → `MesloLGS NF` |
 | **VS Code** | Settings → Terminal Font → `MesloLGS NF` |
-| **Windows Terminal** | Settings → Profile → Appearance → Font → `MesloLGS NF` |
+
 
 ## Aliases
 
