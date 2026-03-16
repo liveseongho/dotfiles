@@ -694,7 +694,15 @@ run_delete() {
     fi
   done
 
-  remove_dotfile "$HOME/.gitconfig"
+  # gitconfig: only remove settings we added (keep user.name/email)
+  header "Git Config Cleanup"
+  local gc_settings=("credential.helper" "pull.rebase")
+  for key in "${gc_settings[@]}"; do
+    if git config --global --get "$key" &>/dev/null; then
+      git config --global --unset "$key"
+      ok "Removed $key"
+    fi
+  done
 
   # Remove vim colorschemes/autoload we installed
   if [ -d "$HOME/.vim/colors" ]; then
