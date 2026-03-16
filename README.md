@@ -105,7 +105,6 @@ MesloLGS NF is auto-installed by the `fonts` module. If symbols look broken, set
 | **Terminal.app** | Preferences → Profiles → Font → Change → `MesloLGS NF` |
 | **VS Code** | Settings → Terminal Font → `MesloLGS NF` |
 | **Windows Terminal** | Settings → Profile → Appearance → Font → `MesloLGS NF` |
-| **GNOME Terminal** | Preferences → Profile → Custom font → `MesloLGS NF` |
 
 ## Aliases
 
