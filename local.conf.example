@@ -1,0 +1,18 @@
+# local.conf — Machine-specific dotfiles configuration
+# This file is gitignored. Copy to local.conf and edit.
+# Generated automatically on first install, or manually:
+#   cp local.conf.example local.conf
+
+# ========== Git ==========
+GIT_USER_NAME="Your Name"
+GIT_USER_EMAIL="your@email.com"
+
+# ========== Symlink mode ==========
+# For each dotfile: "link" (symlink to dotfiles/) or "copy" (copy into ~/)
+# "link" keeps files synced with repo, "copy" allows local edits without affecting repo
+ZSHRC_MODE="link"       # link | copy
+BASHRC_MODE="append"    # link | copy | append (append zsh-switch to existing)
+VIMRC_MODE="link"       # link | copy
+TMUX_MODE="link"        # link | copy
+P10K_MODE="link"        # link | copy
+GITCONFIG_MODE="copy"   # copy (always copy — needs per-machine user/email)

@@ -6,6 +6,9 @@ if [ -z "$ZSH_VERSION" ]; then
   return 0 2>/dev/null || exit 0
 fi
 
+# Tab display: match vim's tabstop=4 (must be before p10k instant prompt)
+tabs 4 2>/dev/null
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -32,8 +35,8 @@ fi
 
 # ========== History ==========
 HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=50000
+SAVEHIST=50000
 
 setopt hist_ignore_all_dups
 setopt hist_ignore_dups
@@ -60,6 +63,12 @@ fi
 alias ll='ls -la'
 alias la='ls -A'
 alias l='ls -CF'
+alias gs='git status'
+alias sq='squeue'
+alias si='sinfo'
+alias ta='tmux attach -t'
+alias tn='tmux new -s'
+
 
 # ========== Powerlevel10k ==========
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh

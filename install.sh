@@ -32,6 +32,81 @@ warn()  { echo -e "${YELLOW}[warn]${NC} $1"; }
 err()   { echo -e "${RED}[error]${NC} $1"; }
 header() { echo -e "\n${BOLD}${CYAN}── $1 ──${NC}"; }
 
+# ========== Local config ==========
+LOCAL_CONF="$DOTFILES_DIR/local.conf"
+
+load_local_conf() {
+  if [ -f "$LOCAL_CONF" ]; then
+    source "$LOCAL_CONF"
+    ok "Loaded local.conf"
+    return 0
+  fi
+  return 1
+}
+
+create_local_conf() {
+  header "Local Configuration (first-time setup)"
+
+  info "Creating local.conf for this machine."
+  info "This file is gitignored — your settings stay local."
+  echo ""
+
+  # Git info
+  local current_name current_email
+  current_name=$(git config --global user.name 2>/dev/null || echo "")
+  current_email=$(git config --global user.email 2>/dev/null || echo "")
+
+  read -rp "  Git user.name [${current_name:-Your Name}]: " git_name
+  git_name="${git_name:-$current_name}"
+  read -rp "  Git user.email [${current_email:-your@email.com}]: " git_email
+  git_email="${git_email:-$current_email}"
+
+  echo ""
+
+  # Symlink mode
+  info "How should dotfiles be installed?"
+  echo -e "  ${CYAN}link${NC}   — symlink to dotfiles/ (stays synced with repo)"
+  echo -e "  ${CYAN}copy${NC}   — copy into ~/ (allows local edits)"
+  echo -e "  ${CYAN}append${NC} — append to existing file (bashrc only)"
+  echo ""
+
+  local default_mode="link"
+  read -rp "  Default mode for all files? [link/copy] (default: link): " chosen_mode
+  chosen_mode="${chosen_mode:-$default_mode}"
+  case "$chosen_mode" in
+    link|copy) ;;
+    *) chosen_mode="link" ;;
+  esac
+
+  read -rp "  .bashrc mode? [link/copy/append] (default: append): " bashrc_mode
+  bashrc_mode="${bashrc_mode:-append}"
+
+  cat > "$LOCAL_CONF" <<EOF
+# local.conf — Machine-specific dotfiles configuration
+# Generated: $(date +%Y-%m-%d)
+# This file is gitignored.
+
+# ========== Git ==========
+GIT_USER_NAME="$git_name"
+GIT_USER_EMAIL="$git_email"
+
+# ========== Symlink mode ==========
+# link = symlink to dotfiles/ (stays synced)
+# copy = copy into ~/ (allows local edits)
+# append = append to existing (bashrc only)
+ZSHRC_MODE="$chosen_mode"
+BASHRC_MODE="$bashrc_mode"
+VIMRC_MODE="$chosen_mode"
+TMUX_MODE="$chosen_mode"
+P10K_MODE="$chosen_mode"
+GITCONFIG_MODE="copy"
+EOF
+
+  echo ""
+  ok "local.conf created"
+  source "$LOCAL_CONF"
+}
+
 # ========== Python detection ==========
 detect_python() {
   if command -v python3 &>/dev/null; then
@@ -236,38 +311,113 @@ install_vim() {
 install_symlinks() {
   header "Symlinks"
 
-  link_file() {
-    local src="$1" dst="$2"
-    if [ -f "$dst" ] || [ -L "$dst" ]; then
-      if [ "$(readlink "$dst")" = "$src" ]; then
-        ok "$(basename "$dst")"
-        return
-      fi
-      warn "Backing up $(basename "$dst")"
-      mv "$dst" "${dst}.backup.$(date +%Y%m%d%H%M%S)"
+  # Install a dotfile by mode: link, copy, or append
+  install_dotfile() {
+    local src="$1" dst="$2" mode="$3"
+
+    # Already correct symlink?
+    if [ "$mode" = "link" ] && [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+      ok "$(basename "$dst") (linked)"
+      return
     fi
-    ln -sf "$src" "$dst"
-    ok "Linked $(basename "$dst")"
+
+    # Already identical copy?
+    if [ "$mode" = "copy" ] && [ -f "$dst" ] && ! [ -L "$dst" ] && diff -q "$src" "$dst" &>/dev/null; then
+      ok "$(basename "$dst") (copy, up to date)"
+      return
+    fi
+
+    # Existing file — backup first
+    if [ -f "$dst" ] || [ -L "$dst" ]; then
+      local backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
+      mv "$dst" "$backup"
+      warn "Backed up $(basename "$dst") → $(basename "$backup")"
+    fi
+
+    case "$mode" in
+      link)
+        ln -sf "$src" "$dst"
+        ok "$(basename "$dst") (linked)"
+        ;;
+      copy)
+        cp -f "$src" "$dst"
+        ok "$(basename "$dst") (copied)"
+        ;;
+      *)
+        err "Unknown mode '$mode' for $(basename "$dst")"
+        ;;
+    esac
   }
 
-  link_file "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
-  # bashrc: append zsh auto-switch instead of overwriting
-  if [ -f "$HOME/.bashrc" ]; then
-    if ! grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
-      info "Appending zsh auto-switch to existing .bashrc"
-      echo "" >> "$HOME/.bashrc"
-      cat "$DOTFILES_DIR/bashrc" >> "$HOME/.bashrc"
-      ok "Appended to .bashrc"
+  install_dotfile "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"     "${ZSHRC_MODE:-link}"
+  install_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"     "${VIMRC_MODE:-link}"
+  install_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf" "${TMUX_MODE:-link}"
+  install_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"  "${P10K_MODE:-link}"
+
+  # bashrc: special handling for "append" mode
+  local bashrc_mode="${BASHRC_MODE:-append}"
+  if [ "$bashrc_mode" = "append" ]; then
+    if [ -f "$HOME/.bashrc" ]; then
+      if ! grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
+        local backup="$HOME/.bashrc.backup.$(date +%Y%m%d%H%M%S)"
+        cp "$HOME/.bashrc" "$backup"
+        warn "Backed up .bashrc → $(basename "$backup")"
+        echo "" >> "$HOME/.bashrc"
+        cat "$DOTFILES_DIR/bashrc" >> "$HOME/.bashrc"
+        ok ".bashrc (appended zsh switch)"
+      else
+        ok ".bashrc (already has zsh switch)"
+      fi
     else
-      ok ".bashrc already has zsh switch"
+      install_dotfile "$DOTFILES_DIR/bashrc" "$HOME/.bashrc" "link"
     fi
   else
-    link_file "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
+    install_dotfile "$DOTFILES_DIR/bashrc" "$HOME/.bashrc" "$bashrc_mode"
   fi
-  link_file "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
-  link_file "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
-  # gitconfig: skip — user-specific (name, email)
-  link_file "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
+}
+
+# ========== Module: gitconfig ==========
+install_gitconfig() {
+  header "Git Config"
+
+  local dst="$HOME/.gitconfig"
+  local src="$DOTFILES_DIR/gitconfig"
+  local git_name="${GIT_USER_NAME:-}"
+  local git_email="${GIT_USER_EMAIL:-}"
+
+  if [ ! -f "$src" ]; then
+    warn "No gitconfig template in dotfiles, skipping"
+    return
+  fi
+
+  if [ -z "$git_name" ] || [ -z "$git_email" ]; then
+    warn "GIT_USER_NAME or GIT_USER_EMAIL not set in local.conf, skipping"
+    return
+  fi
+
+  # Check if already up to date
+  if [ -f "$dst" ] && ! [ -L "$dst" ]; then
+    local expected
+    expected=$(sed -e "s/name = .*/name = $git_name/" -e "s/email = .*/email = $git_email/" "$src")
+    if [ "$(cat "$dst")" = "$expected" ]; then
+      ok ".gitconfig (up to date)"
+      return
+    fi
+  fi
+
+  # Backup existing
+  if [ -f "$dst" ] || [ -L "$dst" ]; then
+    local backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
+    mv "$dst" "$backup"
+    warn "Backed up .gitconfig → $(basename "$backup")"
+  fi
+
+  # Generate from template
+  sed -e "s/name = .*/name = $git_name/" \
+      -e "s/email = .*/email = $git_email/" \
+      "$src" > "$dst"
+
+  ok ".gitconfig (name=$git_name, email=$git_email)"
 }
 
 # ========== Module: macos ==========
@@ -338,6 +488,8 @@ run_status() {
     "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
 
     "Symlink .p10k.zsh:test -L $HOME/.p10k.zsh"
+    "Git config:test -f $HOME/.gitconfig"
+    "local.conf:test -f $DOTFILES_DIR/local.conf"
   )
 
   local missing=0
@@ -369,10 +521,11 @@ run_status() {
 }
 
 # ========== Main ==========
-ALL_MODULES="deps omz plugins p10k fonts vim symlinks macos"
+ALL_MODULES="deps omz plugins p10k fonts vim symlinks gitconfig macos"
 
 run_all() {
   setup_repo
+  load_local_conf || create_local_conf
   for mod in $ALL_MODULES; do
     install_$mod
   done
@@ -403,6 +556,7 @@ case "${1:-}" in
     ;;
   "_update_run")
     # Internal: called after git pull to run with fresh code
+    load_local_conf || create_local_conf
     for mod in $ALL_MODULES; do
       install_$mod
     done
@@ -432,6 +586,7 @@ case "${1:-}" in
     # Single module install
     if echo "$ALL_MODULES" | grep -qw "$1"; then
       setup_repo
+      load_local_conf || create_local_conf
       install_$1
     else
       err "Unknown command: $1"
