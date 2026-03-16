@@ -398,7 +398,7 @@ install_symlinks() {
   install_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"     "${VIMRC_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf" "${TMUX_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"  "${P10K_MODE:-link}"
-  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-append}"
+  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-link}"
 }
 
 # ========== Module: gitconfig ==========
