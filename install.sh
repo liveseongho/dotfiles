@@ -223,10 +223,10 @@ install_plugins() {
     local name="$1" url="$2"
     local dest="$ZSH_CUSTOM/plugins/$name"
     if [ ! -d "$dest" ]; then
-      info "Installing $name..."
+      info "Installing $name → $dest"
       git clone "$url" "$dest"
     else
-      ok "$name"
+      ok "$name ($dest)"
     fi
   }
 
@@ -255,10 +255,10 @@ install_p10k() {
   local P10K_DIR="$ZSH_CUSTOM/themes/powerlevel10k"
 
   if [ ! -d "$P10K_DIR" ]; then
-    info "Installing Powerlevel10k..."
+    info "Installing Powerlevel10k → $P10K_DIR"
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
   else
-    ok "Powerlevel10k"
+    ok "Powerlevel10k ($P10K_DIR)"
   fi
 }
 
@@ -285,9 +285,9 @@ install_fonts() {
     if [ "$OS" = "Linux" ] && command -v fc-cache &>/dev/null; then
       fc-cache -f "$FONT_DIR"
     fi
-    ok "MesloLGS NF fonts installed"
+    ok "MesloLGS NF fonts → $FONT_DIR"
   else
-    ok "MesloLGS NF fonts"
+    ok "MesloLGS NF fonts ($FONT_DIR)"
   fi
 }
 
@@ -307,7 +307,7 @@ install_vim() {
 
   # Show active colorscheme from vimrc
   local scheme=$(grep "^colorscheme" "$DOTFILES_DIR/vimrc" 2>/dev/null | awk '{print $2}')
-  ok "Vim colorscheme: ${scheme:-default}"
+  ok "Vim colorscheme: ${scheme:-default} ($HOME/.vim/colors/)"
 }
 
 MARKER_BEGIN="# >>> dotfiles >>>"
@@ -322,7 +322,7 @@ install_symlinks() {
     local src="$1" dst="$2"
 
     if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
-      ok "$(basename "$dst") (linked)"
+      ok "$dst → $src (linked)"
       return
     fi
 
@@ -330,11 +330,11 @@ install_symlinks() {
     if [ -f "$dst" ] || [ -L "$dst" ]; then
       local backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
       mv "$dst" "$backup"
-      warn "Backed up $(basename "$dst") → $(basename "$backup")"
+      warn "Backed up $dst → $backup"
     fi
 
     ln -sf "$src" "$dst"
-    ok "$(basename "$dst") (linked)"
+    ok "$dst → $src (linked)"
   }
 
   # Append: inject dotfiles content as a marked block
@@ -346,46 +346,41 @@ install_symlinks() {
     if [ -L "$dst" ]; then
       local target="$(readlink "$dst")"
       rm "$dst"
-      # If it was pointing at our dotfiles source, start with empty file
       if [ "$target" = "$src" ]; then
         touch "$dst"
       else
         cp "$target" "$dst"
       fi
-      info "$name — converted symlink to file for append mode"
+      info "$dst — converted symlink to file for append mode"
     fi
 
     # Check if marker block already exists and is up to date
     if [ -f "$dst" ] && grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
-      # Extract current block content (between markers)
       local current
       current=$(sed -n "/$MARKER_BEGIN/,/$MARKER_END/{/$MARKER_BEGIN/d;/$MARKER_END/d;p;}" "$dst")
       local new_content
       new_content=$(cat "$src")
 
       if [ "$current" = "$new_content" ]; then
-        ok "$name (appended, up to date)"
+        ok "$dst ← $src (appended, up to date)"
         return
       fi
 
-      # Update: remove old block, append new one
       sed -i.bak "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null || \
         sed -i '' "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null
       rm -f "${dst}.bak"
-      info "$name — updating dotfiles block"
+      info "$dst — updating dotfiles block"
     fi
 
-    # Create file if it doesn't exist
     [ -f "$dst" ] || touch "$dst"
 
-    # Append marked block
     {
       echo ""
       echo "$MARKER_BEGIN"
       cat "$src"
       echo "$MARKER_END"
     } >> "$dst"
-    ok "$name (appended)"
+    ok "$dst ← $src (appended)"
   }
 
   # Install based on mode
