@@ -67,19 +67,18 @@ create_local_conf() {
   # Symlink mode
   info "How should dotfiles be installed?"
   echo -e "  ${CYAN}link${NC}   — symlink to dotfiles/ (stays synced with repo)"
-  echo -e "  ${CYAN}copy${NC}   — copy into ~/ (allows local edits)"
-  echo -e "  ${CYAN}append${NC} — append to existing file (bashrc only)"
+  echo -e "  ${CYAN}append${NC} — inject as marked block (preserves existing config)"
   echo ""
 
   local default_mode="link"
-  read -rp "  Default mode for all files? [link/copy] (default: link): " chosen_mode
+  read -rp "  Default mode for rc files? [link/append] (default: link): " chosen_mode
   chosen_mode="${chosen_mode:-$default_mode}"
   case "$chosen_mode" in
-    link|copy) ;;
+    link|append) ;;
     *) chosen_mode="link" ;;
   esac
 
-  read -rp "  .bashrc mode? [link/copy/append] (default: append): " bashrc_mode
+  read -rp "  .bashrc mode? [link/append] (default: append): " bashrc_mode
   bashrc_mode="${bashrc_mode:-append}"
 
   cat > "$LOCAL_CONF" <<EOF
@@ -93,14 +92,13 @@ GIT_USER_EMAIL="$git_email"
 
 # ========== Symlink mode ==========
 # link = symlink to dotfiles/ (stays synced)
-# copy = copy into ~/ (allows local edits)
-# append = append to existing (bashrc only)
+# append = inject as marked block (preserves existing config)
 ZSHRC_MODE="$chosen_mode"
 BASHRC_MODE="$bashrc_mode"
 VIMRC_MODE="$chosen_mode"
 TMUX_MODE="$chosen_mode"
 P10K_MODE="$chosen_mode"
-GITCONFIG_MODE="copy"
+# gitconfig: managed via git config --global
 EOF
 
   echo ""
@@ -308,23 +306,19 @@ install_vim() {
   ok "Vim colorscheme: ${scheme:-default}"
 }
 
+MARKER_BEGIN="# >>> dotfiles >>>"
+MARKER_END="# <<< dotfiles <<<"
+
 # ========== Module: symlinks ==========
 install_symlinks() {
   header "Symlinks"
 
-  # Install a dotfile by mode: link, copy, or append
-  install_dotfile() {
-    local src="$1" dst="$2" mode="$3"
+  # Link: symlink to dotfiles/
+  link_dotfile() {
+    local src="$1" dst="$2"
 
-    # Already correct symlink?
-    if [ "$mode" = "link" ] && [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
       ok "$(basename "$dst") (linked)"
-      return
-    fi
-
-    # Already identical copy?
-    if [ "$mode" = "copy" ] && [ -f "$dst" ] && ! [ -L "$dst" ] && diff -q "$src" "$dst" &>/dev/null; then
-      ok "$(basename "$dst") (copy, up to date)"
       return
     fi
 
@@ -335,18 +329,55 @@ install_symlinks() {
       warn "Backed up $(basename "$dst") → $(basename "$backup")"
     fi
 
+    ln -sf "$src" "$dst"
+    ok "$(basename "$dst") (linked)"
+  }
+
+  # Append: inject dotfiles content as a marked block
+  append_dotfile() {
+    local src="$1" dst="$2"
+    local name="$(basename "$dst")"
+
+    # Check if marker block already exists and is up to date
+    if [ -f "$dst" ] && grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
+      # Extract current block content (between markers)
+      local current
+      current=$(sed -n "/$MARKER_BEGIN/,/$MARKER_END/{/$MARKER_BEGIN/d;/$MARKER_END/d;p;}" "$dst")
+      local new_content
+      new_content=$(cat "$src")
+
+      if [ "$current" = "$new_content" ]; then
+        ok "$name (appended, up to date)"
+        return
+      fi
+
+      # Update: remove old block, append new one
+      sed -i.bak "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null || \
+        sed -i '' "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null
+      rm -f "${dst}.bak"
+      info "$name — updating dotfiles block"
+    fi
+
+    # Create file if it doesn't exist
+    [ -f "$dst" ] || touch "$dst"
+
+    # Append marked block
+    {
+      echo ""
+      echo "$MARKER_BEGIN"
+      cat "$src"
+      echo "$MARKER_END"
+    } >> "$dst"
+    ok "$name (appended)"
+  }
+
+  # Install based on mode
+  install_dotfile() {
+    local src="$1" dst="$2" mode="$3"
     case "$mode" in
-      link)
-        ln -sf "$src" "$dst"
-        ok "$(basename "$dst") (linked)"
-        ;;
-      copy)
-        cp -f "$src" "$dst"
-        ok "$(basename "$dst") (copied)"
-        ;;
-      *)
-        err "Unknown mode '$mode' for $(basename "$dst")"
-        ;;
+      link)   link_dotfile "$src" "$dst" ;;
+      append) append_dotfile "$src" "$dst" ;;
+      *)      err "Unknown mode '$mode' for $(basename "$dst")" ;;
     esac
   }
 
@@ -354,27 +385,7 @@ install_symlinks() {
   install_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"     "${VIMRC_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf" "${TMUX_MODE:-link}"
   install_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"  "${P10K_MODE:-link}"
-
-  # bashrc: special handling for "append" mode
-  local bashrc_mode="${BASHRC_MODE:-append}"
-  if [ "$bashrc_mode" = "append" ]; then
-    if [ -f "$HOME/.bashrc" ]; then
-      if ! grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
-        local backup="$HOME/.bashrc.backup.$(date +%Y%m%d%H%M%S)"
-        cp "$HOME/.bashrc" "$backup"
-        warn "Backed up .bashrc → $(basename "$backup")"
-        echo "" >> "$HOME/.bashrc"
-        cat "$DOTFILES_DIR/bashrc" >> "$HOME/.bashrc"
-        ok ".bashrc (appended zsh switch)"
-      else
-        ok ".bashrc (already has zsh switch)"
-      fi
-    else
-      install_dotfile "$DOTFILES_DIR/bashrc" "$HOME/.bashrc" "link"
-    fi
-  else
-    install_dotfile "$DOTFILES_DIR/bashrc" "$HOME/.bashrc" "$bashrc_mode"
-  fi
+  install_dotfile "$DOTFILES_DIR/bashrc"    "$HOME/.bashrc"    "${BASHRC_MODE:-append}"
 }
 
 # ========== Module: gitconfig ==========
@@ -631,28 +642,42 @@ run_delete() {
     fi
   }
 
-  remove_dotfile "$HOME/.zshrc"
-  remove_dotfile "$HOME/.vimrc"
-  remove_dotfile "$HOME/.tmux.conf"
-  remove_dotfile "$HOME/.p10k.zsh"
-  remove_dotfile "$HOME/.gitconfig"
+  # Remove marker block from a file (for append-mode dotfiles)
+  remove_dotfile_block() {
+    local dst="$1" name
+    name="$(basename "$dst")"
 
-  # bashrc: if it has our zsh switch, remove those lines
-  if [ -f "$HOME/.bashrc" ]; then
-    if grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
-      cp "$HOME/.bashrc" "$BACKUP_DIR/.bashrc"
-      # Remove the appended block (from our bashrc marker to end, or just the exec zsh lines)
-      sed -i.bak '/# Auto-switch to zsh/,/exec zsh/d' "$HOME/.bashrc" 2>/dev/null || \
-        sed -i '' '/# Auto-switch to zsh/,/exec zsh/d' "$HOME/.bashrc" 2>/dev/null
-      # If that didn't work (no marker), just remove exec zsh line
-      if grep -q "exec zsh" "$HOME/.bashrc" 2>/dev/null; then
-        sed -i.bak '/exec zsh/d' "$HOME/.bashrc" 2>/dev/null || \
-          sed -i '' '/exec zsh/d' "$HOME/.bashrc" 2>/dev/null
-      fi
-      rm -f "$HOME/.bashrc.bak"
-      ok "Removed zsh switch from .bashrc (backed up to $BACKUP_DIR/.bashrc)"
+    if [ ! -f "$dst" ]; then
+      info "$name — not present, skipping"
+      return
     fi
-  fi
+
+    if grep -q "$MARKER_BEGIN" "$dst" 2>/dev/null; then
+      cp "$dst" "$BACKUP_DIR/$name"
+      sed -i.bak "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null || \
+        sed -i '' "/$MARKER_BEGIN/,/$MARKER_END/d" "$dst" 2>/dev/null
+      rm -f "${dst}.bak"
+      # Remove trailing blank lines left behind
+      sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$dst" 2>/dev/null || \
+        sed -i '' -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$dst" 2>/dev/null
+      rm -f "${dst}.bak"
+      ok "$name — removed dotfiles block (backed up to $BACKUP_DIR/$name)"
+    else
+      info "$name — no dotfiles block found, skipping"
+    fi
+  }
+
+  # For each file: if it's a symlink (link mode), use remove_dotfile.
+  # If it's a regular file with markers (append mode), use remove_dotfile_block.
+  for dst in "$HOME/.zshrc" "$HOME/.vimrc" "$HOME/.tmux.conf" "$HOME/.p10k.zsh" "$HOME/.bashrc"; do
+    if [ -L "$dst" ]; then
+      remove_dotfile "$dst"
+    else
+      remove_dotfile_block "$dst"
+    fi
+  done
+
+  remove_dotfile "$HOME/.gitconfig"
 
   # Remove vim colorschemes/autoload we installed
   if [ -d "$HOME/.vim/colors" ]; then

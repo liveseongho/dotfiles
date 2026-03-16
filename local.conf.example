@@ -7,13 +7,13 @@
 GIT_USER_NAME="Your Name"
 GIT_USER_EMAIL="your@email.com"
 
-# ========== Symlink mode ==========
-# For each dotfile: "link" (symlink to dotfiles/) or "copy" (copy into ~/)
-# "link" keeps files synced with repo, "copy" allows local edits without affecting repo
-ZSHRC_MODE="link"       # link | copy
-BASHRC_MODE="append"    # link | copy | append (append zsh-switch to existing)
-VIMRC_MODE="link"       # link | copy
-TMUX_MODE="link"        # link | copy
-P10K_MODE="link"        # link | copy
-# gitconfig: no mode needed — settings are appended via `git config --global`
-# user.name/email from local.conf are only set if not already configured
+# ========== Install mode ==========
+# For each dotfile: "link" (symlink) or "append" (inject as marked block)
+# "link"   — symlink to dotfiles/ (stays synced with repo)
+# "append" — adds content inside # >>> dotfiles >>> markers (preserves existing config)
+ZSHRC_MODE="link"       # link | append
+BASHRC_MODE="append"    # link | append
+VIMRC_MODE="link"       # link | append
+TMUX_MODE="link"        # link | append
+P10K_MODE="link"        # link | append
+# gitconfig: managed via `git config --global` (no link/append needed)

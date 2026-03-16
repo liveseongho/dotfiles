@@ -73,17 +73,16 @@ On first install, you'll be asked to create `local.conf` with your machine-speci
 GIT_USER_NAME="Your Name"
 GIT_USER_EMAIL="your@email.com"
 
-ZSHRC_MODE="link"       # link | copy
-BASHRC_MODE="append"    # link | copy | append
-VIMRC_MODE="link"       # link | copy
-TMUX_MODE="link"        # link | copy
-P10K_MODE="link"        # link | copy
-GITCONFIG_MODE="copy"   # always copy (per-machine user/email)
+ZSHRC_MODE="link"       # link | append
+BASHRC_MODE="append"    # link | append
+VIMRC_MODE="link"       # link | append
+TMUX_MODE="link"        # link | append
+P10K_MODE="link"        # link | append
+# gitconfig: managed via git config --global (no mode needed)
 ```
 
 - **link** — symlink to `~/dotfiles/` (stays synced with repo)
-- **copy** — copy into `~/` (allows local edits without affecting repo)
-- **append** — append to existing file (bashrc only)
+- **append** — inject inside `# >>> dotfiles >>>` markers (preserves existing config, safe to re-run)
 
 ## Features
 
