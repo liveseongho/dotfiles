@@ -484,40 +484,44 @@ run_status() {
     "Powerlevel10k:test -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     "Vim colorscheme:test -f $HOME/.vim/colors/one-monokai.vim -o -f $HOME/.vim/colors/onedark.vim"
     "bashrc zsh switch:grep -q 'exec zsh' $HOME/.bashrc 2>/dev/null"
-    "Symlink .zshrc:test -L $HOME/.zshrc"
-    "Symlink .vimrc:test -L $HOME/.vimrc"
-    "Symlink .tmux.conf:test -L $HOME/.tmux.conf"
-
-    "Symlink .p10k.zsh:test -L $HOME/.p10k.zsh"
-    "Git config:test -f $HOME/.gitconfig"
+    ".zshrc:test -e $HOME/.zshrc"
+    ".vimrc:test -e $HOME/.vimrc"
+    ".tmux.conf:test -e $HOME/.tmux.conf"
+    ".p10k.zsh:test -e $HOME/.p10k.zsh"
+    ".gitconfig:test -f $HOME/.gitconfig"
     "local.conf:test -f $DOTFILES_DIR/local.conf"
   )
 
   local missing=0
+  local missing_names=()
+  local total=${#checks[@]}
+
   for check in "${checks[@]}"; do
     local name="${check%%:*}"
     local cmd="${check#*:}"
-    if eval "$cmd" &>/dev/null; then
-      ok "$name"
-    else
-      warn "$name — not installed"
+    if ! eval "$cmd" &>/dev/null; then
       missing=$((missing + 1))
+      missing_names+=("$name")
     fi
   done
 
   local py=$(detect_python)
+  local pyver=""
   if [ -n "$py" ]; then
-    local pyver=$($py -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')")
-    ok "Python $pyver"
-  else
-    warn "Python — not found (optional)"
+    pyver=$($py -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')")
   fi
 
   echo ""
   if [ "$missing" -eq 0 ]; then
-    echo -e "  ${GREEN}Everything installed!${NC}"
+    echo -e "  ${GREEN}✅ All $total checks passed${NC}${pyver:+ · Python $pyver}"
   else
-    echo -e "  ${YELLOW}$missing item(s) missing. Run 'dotfiles update' to fix.${NC}"
+    echo -e "  ${GREEN}✓ $((total - missing))/$total passed${NC}${pyver:+ · Python $pyver}"
+    echo ""
+    for name in "${missing_names[@]}"; do
+      echo -e "  ${YELLOW}✗ $name${NC}"
+    done
+    echo ""
+    echo -e "  Run ${CYAN}dotfiles update${NC} to fix."
   fi
 }
 
