@@ -15,4 +15,5 @@ BASHRC_MODE="append"    # link | copy | append (append zsh-switch to existing)
 VIMRC_MODE="link"       # link | copy
 TMUX_MODE="link"        # link | copy
 P10K_MODE="link"        # link | copy
-GITCONFIG_MODE="copy"   # copy (always copy — needs per-machine user/email)
+# gitconfig: no mode needed — settings are appended via `git config --global`
+# user.name/email from local.conf are only set if not already configured

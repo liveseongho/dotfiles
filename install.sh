@@ -382,43 +382,64 @@ install_gitconfig() {
   header "Git Config"
 
   local dst="$HOME/.gitconfig"
-  local src="$DOTFILES_DIR/gitconfig"
+
+  # Desired settings to ensure (section key value)
+  local settings=(
+    "credential:helper:store"
+    "pull:rebase:true"
+  )
+
+  local changed=0
+
+  for entry in "${settings[@]}"; do
+    local section="${entry%%:*}"
+    local rest="${entry#*:}"
+    local key="${rest%%:*}"
+    local value="${rest#*:}"
+
+    local current
+    current=$(git config --global --get "$section.$key" 2>/dev/null || echo "")
+
+    if [ "$current" = "$value" ]; then
+      ok "$section.$key = $value"
+    else
+      git config --global "$section.$key" "$value"
+      ok "$section.$key = $value (set)"
+      changed=$((changed + 1))
+    fi
+  done
+
+  # Set user.name/email from local.conf if not already configured
   local git_name="${GIT_USER_NAME:-}"
   local git_email="${GIT_USER_EMAIL:-}"
 
-  if [ ! -f "$src" ]; then
-    warn "No gitconfig template in dotfiles, skipping"
-    return
-  fi
-
-  if [ -z "$git_name" ] || [ -z "$git_email" ]; then
-    warn "GIT_USER_NAME or GIT_USER_EMAIL not set in local.conf, skipping"
-    return
-  fi
-
-  # Check if already up to date
-  if [ -f "$dst" ] && ! [ -L "$dst" ]; then
-    local expected
-    expected=$(sed -e "s/name = .*/name = $git_name/" -e "s/email = .*/email = $git_email/" "$src")
-    if [ "$(cat "$dst")" = "$expected" ]; then
-      ok ".gitconfig (up to date)"
-      return
+  if [ -n "$git_name" ]; then
+    local current_name
+    current_name=$(git config --global user.name 2>/dev/null || echo "")
+    if [ -z "$current_name" ]; then
+      git config --global user.name "$git_name"
+      ok "user.name = $git_name (set)"
+      changed=$((changed + 1))
+    else
+      ok "user.name = $current_name"
     fi
   fi
 
-  # Backup existing
-  if [ -f "$dst" ] || [ -L "$dst" ]; then
-    local backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
-    mv "$dst" "$backup"
-    warn "Backed up .gitconfig → $(basename "$backup")"
+  if [ -n "$git_email" ]; then
+    local current_email
+    current_email=$(git config --global user.email 2>/dev/null || echo "")
+    if [ -z "$current_email" ]; then
+      git config --global user.email "$git_email"
+      ok "user.email = $git_email (set)"
+      changed=$((changed + 1))
+    else
+      ok "user.email = $current_email"
+    fi
   fi
 
-  # Generate from template
-  sed -e "s/name = .*/name = $git_name/" \
-      -e "s/email = .*/email = $git_email/" \
-      "$src" > "$dst"
-
-  ok ".gitconfig (name=$git_name, email=$git_email)"
+  if [ "$changed" -eq 0 ]; then
+    ok ".gitconfig (already up to date)"
+  fi
 }
 
 # ========== Module: macos ==========
