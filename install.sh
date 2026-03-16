@@ -328,19 +328,18 @@ install_symlinks() {
   link_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
 
-  # Summary of .local files (only show if any exist)
-  local local_summary=""
+  # Summary of .local files
+  echo ""
+  info "Local overrides:"
   for lf in "$HOME/.zshrc.local" "$HOME/.bashrc.local" "$HOME/.vimrc.local" "$HOME/.tmux.conf.local"; do
+    local name="$(basename "$lf")"
     if [ -f "$lf" ]; then
       local lines=$(wc -l < "$lf" | tr -d ' ')
-      local_summary="${local_summary}\n  ${GREEN}✓${NC} $(basename "$lf") ${CYAN}(${lines} lines)${NC}"
+      echo -e "  ${GREEN}✓${NC} $name ${CYAN}(${lines} lines)${NC}"
+    else
+      echo -e "  ${YELLOW}·${NC} $name ${YELLOW}(0 lines)${NC}"
     fi
   done
-  if [ -n "$local_summary" ]; then
-    echo ""
-    info "Local overrides:"
-    echo -e "$local_summary"
-  fi
 }
 
 # ========== Module: gitconfig ==========
