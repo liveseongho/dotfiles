@@ -439,7 +439,7 @@ symbols = [
 for label, chars in symbols:
     print(f'\033[0;32m[ok]\033[0m {label:14s} {chars}')
 "
-    echo -e "${YELLOW}[!!]${NC} Broken symbols? Set terminal font to ${BOLD}MesloLGS NF${NC}"
+    info "Broken symbols? Set terminal font to MesloLGS NF — https://github.com/liveseongho/dotfiles#fonts"
   else
     warn "Python >= $MIN_PYTHON_VERSION not found — run 'p10k configure' to verify fonts"
   fi

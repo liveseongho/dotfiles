@@ -95,6 +95,18 @@ If an existing rc file is found during install, it's automatically backed up and
 - **HPC** — Environment Modules support, `squeue`/`sinfo` aliases
 - **Fonts** — MesloLGS NF auto-downloaded + symbol check
 
+## Fonts
+
+MesloLGS NF is auto-installed by the `fonts` module. If symbols look broken, set your terminal font:
+
+| Terminal | Setting |
+|----------|---------|
+| **iTerm2** | Preferences → Profiles → Text → Font → `MesloLGS NF` |
+| **Terminal.app** | Preferences → Profiles → Font → Change → `MesloLGS NF` |
+| **VS Code** | Settings → Terminal Font → `MesloLGS NF` |
+| **Windows Terminal** | Settings → Profile → Appearance → Font → `MesloLGS NF` |
+| **GNOME Terminal** | Preferences → Profile → Custom font → `MesloLGS NF` |
+
 ## Aliases
 
 | Alias | Command |
