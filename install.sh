@@ -320,10 +320,6 @@ install_symlinks() {
     ln -sf "$src" "$dst"
     ok "$dst → $src"
 
-    # Hint about .local
-    if [ ! -f "$local_file" ]; then
-      info "  Tip: create $(basename "$local_file") for machine-specific config"
-    fi
   }
 
   link_dotfile "$DOTFILES_DIR/zshrc"     "$HOME/.zshrc"
@@ -331,6 +327,22 @@ install_symlinks() {
   link_dotfile "$DOTFILES_DIR/vimrc"     "$HOME/.vimrc"
   link_dotfile "$DOTFILES_DIR/tmux.conf" "$HOME/.tmux.conf"
   link_dotfile "$DOTFILES_DIR/p10k.zsh"  "$HOME/.p10k.zsh"
+
+  # Summary of .local files
+  echo ""
+  info "Local overrides:"
+  local has_any=false
+  for lf in "$HOME/.zshrc.local" "$HOME/.bashrc.local" "$HOME/.vimrc.local" "$HOME/.tmux.conf.local"; do
+    local name="$(basename "$lf")"
+    if [ -f "$lf" ]; then
+      local lines=$(wc -l < "$lf" | tr -d ' ')
+      echo -e "  ${GREEN}✓${NC} $name ${CYAN}(${lines} lines)${NC}"
+      has_any=true
+    fi
+  done
+  if [ "$has_any" = false ]; then
+    echo -e "  ${YELLOW}(none)${NC} — create ~/.zshrc.local etc. for machine-specific config"
+  fi
 }
 
 # ========== Module: gitconfig ==========
