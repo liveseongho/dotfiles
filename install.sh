@@ -289,7 +289,9 @@ install_symlinks() {
   header "Symlinks"
 
   link_dotfile() {
-    local src="$1" dst="$2" local_file="${dst}.local"
+    local src="$1"
+    local dst="$2"
+    local local_file="${dst}.local"
 
     # Already correct symlink
     if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
