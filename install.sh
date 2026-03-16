@@ -337,7 +337,7 @@ install_symlinks() {
       local lines=$(wc -l < "$lf" | tr -d ' ')
       echo -e "  ${GREEN}✓${NC} $name ${CYAN}(${lines} lines)${NC}"
     else
-      echo -e "  ${YELLOW}·${NC} $name ${YELLOW}(0 lines)${NC}"
+      echo -e "  ${YELLOW}✗${NC} $name ${YELLOW}(0 lines)${NC}"
     fi
   done
 }
