@@ -173,24 +173,16 @@ install_deps() {
   fi
 
   # Git config: skip — user sets their own name/email per machine
-}
 
-# ========== Module: omz ==========
-install_omz() {
-  header "Oh My Zsh"
-
+  # ── Oh My Zsh ──
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
     info "Installing Oh My Zsh..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   else
     ok "Oh My Zsh"
   fi
-}
 
-# ========== Module: plugins ==========
-install_plugins() {
-  header "Zsh Plugins"
-
+  # ── Zsh Plugins ──
   local ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
   clone_plugin() {
@@ -206,72 +198,71 @@ install_plugins() {
 
   clone_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
   clone_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting.git"
-  # fzf
+
   if ! command -v fzf &>/dev/null; then
     info "Installing fzf..."
     if [ "$OS" = "Darwin" ] && command -v brew &>/dev/null; then
       brew install fzf
     else
-      # No sudo needed — installs to ~/.fzf
       git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
       ~/.fzf/install --all --no-bash --no-fish --no-update-rc
     fi
   else
     ok "fzf"
   fi
-}
 
-# ========== Module: p10k ==========
-install_p10k() {
-  header "Powerlevel10k"
-
-  local ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+  # ── Powerlevel10k ──
   local P10K_DIR="$ZSH_CUSTOM/themes/powerlevel10k"
-
   if [ ! -d "$P10K_DIR" ]; then
     info "Installing Powerlevel10k → $P10K_DIR"
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
   else
     ok "Powerlevel10k ($P10K_DIR)"
   fi
-}
 
-# ========== Module: fonts ==========
-install_fonts() {
-  header "Fonts (MesloLGS NF)"
-
+  # ── Fonts (MesloLGS NF) ──
   if [ "$OS" = "Darwin" ]; then
     local FONT_DIR="$HOME/Library/Fonts"
   elif [ "$OS" = "Linux" ]; then
     local FONT_DIR="$HOME/.local/share/fonts"
   else
     warn "Unsupported OS for font install"
-    return
+    FONT_DIR=""
   fi
 
-  if [ ! -f "$FONT_DIR/MesloLGS NF Regular.ttf" ]; then
-    info "Downloading MesloLGS NF fonts..."
-    mkdir -p "$FONT_DIR"
-    for style in "Regular" "Bold" "Italic" "Bold%20Italic"; do
-      curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20${style}.ttf" \
-        -o "$FONT_DIR/MesloLGS NF ${style//%20/ }.ttf"
-    done
-    if [ "$OS" = "Linux" ] && command -v fc-cache &>/dev/null; then
-      fc-cache -f "$FONT_DIR"
+  if [ -n "${FONT_DIR:-}" ]; then
+    if [ ! -f "$FONT_DIR/MesloLGS NF Regular.ttf" ]; then
+      info "Downloading MesloLGS NF fonts..."
+      mkdir -p "$FONT_DIR"
+      for style in "Regular" "Bold" "Italic" "Bold%20Italic"; do
+        curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20${style}.ttf" \
+          -o "$FONT_DIR/MesloLGS NF ${style//%20/ }.ttf"
+      done
+      if [ "$OS" = "Linux" ] && command -v fc-cache &>/dev/null; then
+        fc-cache -f "$FONT_DIR"
+      fi
+      ok "MesloLGS NF fonts → $FONT_DIR"
+    else
+      ok "MesloLGS NF fonts ($FONT_DIR)"
     fi
-    ok "MesloLGS NF fonts → $FONT_DIR"
-  else
-    ok "MesloLGS NF fonts ($FONT_DIR)"
   fi
 }
 
-# ========== Module: vim ==========
-install_vim() {
-  header "Vim"
+# ========== Module: preferences ==========
+install_preferences() {
+  header "Preferences"
 
+  # ── macOS ──
+  if [ "$OS" = "Darwin" ]; then
+    defaults write NSGlobalDomain KeyRepeat -int 3
+    defaults write NSGlobalDomain InitialKeyRepeat -int 20
+    defaults write com.apple.finder AppleShowAllFiles -bool true
+    ok "macOS: key repeat, hidden files"
+  fi
+
+  # ── Vim ──
   mkdir -p "$HOME/.vim/colors" "$HOME/.vim/autoload"
 
-  # Copy all colorschemes and autoload files from dotfiles
   if [ -d "$DOTFILES_DIR/vim/colors" ]; then
     cp -f "$DOTFILES_DIR/vim/colors/"*.vim "$HOME/.vim/colors/" 2>/dev/null
   fi
@@ -279,7 +270,6 @@ install_vim() {
     cp -f "$DOTFILES_DIR/vim/autoload/"*.vim "$HOME/.vim/autoload/" 2>/dev/null
   fi
 
-  # Show active colorscheme from vimrc
   local scheme=$(grep "^colorscheme" "$DOTFILES_DIR/vimrc" 2>/dev/null | awk '{print $2}')
   ok "Vim colorscheme: ${scheme:-default} ($HOME/.vim/colors/)"
 }
@@ -313,7 +303,7 @@ install_symlinks() {
         rm "$dst"
       fi
     elif [ -L "$dst" ]; then
-      # Wrong symlink target — remove
+      # Wrong symlink target — just remove and relink
       rm "$dst"
     fi
 
@@ -350,7 +340,6 @@ install_gitconfig() {
   # Desired settings to ensure (section key value)
   local settings=(
     "credential:helper:store"
-    "pull:rebase:true"
   )
 
   local changed=0
@@ -406,19 +395,7 @@ install_gitconfig() {
   fi
 }
 
-# ========== Module: macos ==========
-install_macos() {
-  if [ "$OS" != "Darwin" ]; then
-    return
-  fi
-
-  header "macOS Preferences"
-
-  defaults write NSGlobalDomain KeyRepeat -int 3
-  defaults write NSGlobalDomain InitialKeyRepeat -int 20
-  defaults write com.apple.finder AppleShowAllFiles -bool true
-  ok "Key repeat, hidden files"
-}
+## (macos merged into preferences)
 
 # ========== Font check ==========
 run_font_check() {
@@ -501,7 +478,7 @@ run_status() {
 }
 
 # ========== Main ==========
-ALL_MODULES="deps omz plugins p10k fonts vim symlinks gitconfig macos"
+ALL_MODULES="deps symlinks gitconfig preferences"
 
 run_all() {
   setup_repo
@@ -598,15 +575,7 @@ run_delete() {
     info "Kept local config files: ${local_files[*]}"
   fi
 
-  # gitconfig: only remove settings we added (keep user.name/email)
-  header "Git Config Cleanup"
-  local gc_settings=("credential.helper" "pull.rebase")
-  for key in "${gc_settings[@]}"; do
-    if git config --global --get "$key" &>/dev/null; then
-      git config --global --unset "$key"
-      ok "Removed $key"
-    fi
-  done
+  # Git config: leave .gitconfig as-is (user may have added their own settings)
 
   # Remove vim colorschemes/autoload we installed
   if [ -d "$HOME/.vim/colors" ]; then
@@ -662,11 +631,30 @@ case "${1:-}" in
     run_all
     ;;
   "update")
-    info "Pulling latest from GitHub..."
     cd "$DOTFILES_DIR"
-    git stash -q 2>/dev/null
-    git pull --rebase origin main
-    git stash pop -q 2>/dev/null
+
+    # Check for local modifications before pulling
+    local dirty_files
+    dirty_files="$(git diff --name-only 2>/dev/null)"
+    if [ -n "$dirty_files" ]; then
+      echo ""
+      warn "You have local modifications to tracked dotfiles:"
+      echo "$dirty_files" | while read -r f; do
+        echo -e "  ${YELLOW}→${NC} $f"
+      done
+      echo ""
+      warn "These will be overwritten by git pull."
+      warn "Back them up first, e.g.:"
+      echo "$dirty_files" | while read -r f; do
+        echo -e "  ${CYAN}cp ~/dotfiles/$f ~/.${f}.local${NC}"
+      done
+      echo ""
+      info "Then run 'dotfiles update' again."
+      exit 1
+    fi
+
+    info "Pulling latest from GitHub..."
+    git pull origin main
     echo ""
     info "Re-running with latest version..."
     exec "$DOTFILES_DIR/install.sh" _update_run
@@ -700,6 +688,8 @@ case "${1:-}" in
     echo ""
     echo "Modules: $ALL_MODULES"
     echo "  ./install.sh <module>    Install specific module only"
+    echo ""
+    echo "Note: omz, plugins, p10k, fonts are installed as part of 'deps'"
     echo ""
     echo "Requirements:"
     echo "  - git, curl, zsh (auto-installed on Linux)"
