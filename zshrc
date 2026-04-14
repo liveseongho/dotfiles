@@ -6,6 +6,13 @@ if [ -z "$ZSH_VERSION" ]; then
   return 0 2>/dev/null || exit 0
 fi
 
+# ========== Fix fpath if zsh standard functions are missing ==========
+if ! (( $fpath[(I)/usr/share/zsh/*/functions] )); then
+  local _zsh_funcs="/usr/share/zsh/${ZSH_VERSION}/functions"
+  [[ -d "$_zsh_funcs" ]] && fpath=("$_zsh_funcs" $fpath)
+  unset _zsh_funcs
+fi
+
 # Tab display: match vim's tabstop=4 (must be before p10k instant prompt)
 tabs 4 2>/dev/null
 
