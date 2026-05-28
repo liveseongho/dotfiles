@@ -57,9 +57,9 @@ create_local_conf() {
   current_name=$(git config --global user.name 2>/dev/null || echo "")
   current_email=$(git config --global user.email 2>/dev/null || echo "")
 
-  read -rp "  Git user.name [${current_name:-Your Name}]: " git_name
+  read -rp "  Git user.name [${current_name:-Your Name}]: " git_name </dev/tty
   git_name="${git_name:-$current_name}"
-  read -rp "  Git user.email [${current_email:-your@email.com}]: " git_email
+  read -rp "  Git user.email [${current_email:-your@email.com}]: " git_email </dev/tty
   git_email="${git_email:-$current_email}"
 
   echo ""
